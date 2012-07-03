@@ -1,0 +1,162 @@
+Control box per-fermenter
+
+Based on an ATmega328 or ATmega328P (the difference doesn't matter)
+
+Supports control of two valves (set/reset relay outputs) and readback
+of valve state (6 GPIOs total).
+
+Supports 1-wire bus (1 GPIO) for thermometers.
+
+Supports control of an LCD. (6 GPIOs, plus one for backlight control).
+
+Supports serial communication over a shared RS485 bus (1 GPIO for tx
+enable plus the two serial pins) and at TTL levels for debug (only
+when tx is disabled).
+
+Supports front panel buttons (the three remaining GPIOs / programming
+pins)
+
+MCU Pin allocation:
+
+Pin  Desc   Use
+ 1   Reset  Reset (programming interface)
+ 2   RxD    Serial receive
+ 3   TxD    Serial transmit
+ 4   PD2    RS485 transmit enable
+ 5   PD3    LCD backlight
+ 6   PD4    Valve 1 set
+ 7   VCC    Power
+ 8   GND    Ground
+ 9   OSC1   Crystal
+10   OSC2   Crystal
+11   PD5    Valve 1 reset
+12   PD6    Valve 2 set
+13   PD7    Valve 2 reset
+14   PB0    1-wire bus interface
+15   PB1    Valve 1 state
+16   PB2    Valve 2 state
+17   MOSI   ICP / button on PB3
+18   MISO   ICP / button on PB4
+19   SCK    ICP / button on PB5
+20   AVCC
+21   AREF
+22   GND    Ground
+23   PC0    LCD D4
+24   PC1    LCD D5
+25   PC2    LCD D6
+26   PC3    LCD D7
+27   PC4    LCD RS
+28   PC5    LCD E
+
+The front panel buttons share pins with the in-circuit programmer.
+
+Other major chips on the board:
+
+ULN2803A (octal darlington driver)
+Six drivers connected to PD3-PD7 to control valve relays, LCD
+backlight and a front panel "transmitting" LED.  Two drivers unused.
+
+MAX489 (duplex RS485 transceiver)
+Connected to RxD, TxD and PD2 to control whether we're transmitting.
+
+Opto-isolators
+Valve state feedback; we use a separate power supply to read the valve
+state because a faulty valve might short the sensor cable to mains.
+Connected to PB1 and PB2.
+
+Power supply
+
+2x9v transformer; one secondary for main power, the other for valve
+state sensor power.
+
+7805 (RS 398-697P) x2  in TO-220 package for voltage regulation.
+
+Bridge rectifier (RS 700-5374) x2 - package has pins 200mil apart, square,
+AC in opposing corners.
+
+What's our power budget?  The LCD backlight takes 120mA.  The only
+other significant power loads are the relay coils, but they are only
+used for very short periods of time, one at a time.
+
+Headers:
+
+Power (mains) - 3 screw contacts
+
+RS485 - 4 screw contacts
+ A,B,Y,Z  (no ground needed!)
+ At ends of bus, terminating resistors should be fitted.
+
+Valve 1 - 5 screw contacts:
+ Live (Grey), Neutral (Blue), Motor (Brown), Switch (White and Orange)
+
+Valve 2 - 5 screw contacts, as valve 1
+
+1-wire bus - 3 screw contacts (power, data, ground)
+
+ICP - 6-pin header (2x3)
+
+FTDI - 6-pin header (1x6)
+
+LCD - 16-pin header (2x8)
+
+Panel buttons and LED - 8-pin header
+
+
+The central controller here can be a MAX489 on a bit of veroboard fed
+by an FTDI lead.
+
+
+
+Registers:
+
+For each thermometer:
+  Name (r/w, eeprom, 12 bytes)
+  Serial number (r/w, eeprom, 8 bytes)
+  Current temperature (r, ram, 2 bytes)
+  Error count (r/w, ram, 2 bytes)
+  Calibration point 1 (r/w, eeprom, 4 bytes)
+  Calibration point 2 (r/w, eeprom, 4 bytes)
+  Upper alarm point (r/w, eeprom, 2 bytes)
+  Lower alarm point (r/w, eeprom, 2 bytes)
+   Total: 32 bytes eeprom, 4 bytes ram
+
+1-wire bus
+  Error count (r/w, ram, 4 bytes)
+   Total: 4 bytes ram
+
+LCD
+  Screen contents (w, device)?
+
+System
+  Firmware version (r, progmem, ? bytes)
+  Station name (r, eeprom, 8 bytes) - writeable only in setup mode?
+  Iteration count (r/w, ram, 4 bytes) - runs through main event loop since reset
+  Bad command count (r/w, ram, 2 bytes)
+  Mode name (r/w, ram, 8 bytes) - for display
+  Thermometers to display (r/w, eeprom, 1 byte [bitmap])
+  Alarm state (r/w, ram, 4 bytes) - bitmap of alarms?
+
+For each valve: (heating or cooling determined by on>off; disabled if equal)
+  On set point (r/w, eeprom, 2 bytes)
+  Off set point (r/w, eeprom, 2 bytes)
+  Thermometer (by index) (r/w, eeprom, 1 byte)
+  Max valve travel time (r/w, eeprom, 1 byte)
+  Intended valve state (r/w, ram, 1 byte)
+  Measured valve state (r, ram, 1 byte)
+  Time remaining for valve movement (r/w, ram, 2 bytes)
+  Alarm count (r/w, ram, 2 bytes)
+   Total: 6 bytes eeprom, 6 bytes ram
+
+For each preset: (selectable from front panal)
+  Name (r/w, eeprom)
+  Command string (r/w, eeprom)
+ - let these take up all the rest of the storage in the EEPROM.
+
+
+Serial commands:
+SELECT stationname
+ (selected station responds OK stationname, other stations go silent)
+READ param1,param2,param3,...
+SET param1=foo,param2=foo,param3=foo...
+SCANBUS
+REFLASH
