@@ -83,6 +83,11 @@ LCDConnector(name="J5",label="LCD",
 # The backlight is run through the 2803 position 5
 driver.c5=backlight
 driver.b5=mcu.pd3
+# Note that the LCDs I've bought for Milton (RS part number 720-0193)
+# already have a series resistor for the backlight when connecting
+# through pins 15 and 16 (this resistor is bypassed if you connect
+# directly to the 'A' and 'K' pads at the other end of the board).  In
+# this case, we omit R2 and use a wire link instead.
 
 # RS485 communication
 # We use a single four-pin connector for both directions of
