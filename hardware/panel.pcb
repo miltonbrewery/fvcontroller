@@ -5,13 +5,13 @@ FileVersion[20070407]
 
 PCB["Front panel" 633858 511811]
 
-Grid[1968.5 0 0 1]
-Cursor[307087 226378 0.000000]
+Grid[1968.0 0 0 1]
+Cursor[303072 308976 0.000000]
 PolyArea[3100.006200]
 Thermal[0.500000]
 DRC[1000 1000 1000 1000 1500 1000]
-Flags("nameonpcb,uniquename,clearnew,snappin")
-Groups("1,c:2:3:4:5:6,s:7:8")
+Flags("nameonpcb,uniquename,clearnew")
+Groups("1,c:2,s")
 Styles["Signal,1000,3600,23622,1000:Power,2500,6000,3500,1000:Fat,4000,6000,3500,1000:Skinny,600,2402,1181,600"]
 
 Symbol[' ' 1800]
@@ -797,32 +797,34 @@ Via[401575 342520 24022 2000 24222 23622 "" "hole"]
 Via[149606 342520 24022 2000 24222 23622 "" "hole"]
 Layer(1 "top")
 (
+	Line[185039 161417 448819 161417 1000 2000 "clearline"]
+	Line[448819 161417 448819 251969 1000 2000 "clearline"]
+	Line[448819 251969 185039 251969 1000 2000 "clearline"]
+	Line[185039 251969 185039 161417 1000 2000 "clearline"]
+	Line[149568 143664 149568 147600 1000 2000 "clearline"]
+	Line[147600 145632 151536 145632 1000 2000 "clearline"]
+	Line[464448 143664 464448 147600 1000 2000 "clearline"]
+	Line[462480 145632 466416 145632 1000 2000 "clearline"]
+	Line[464448 265680 464448 269616 1000 2000 "clearline"]
+	Line[462480 267648 466416 267648 1000 2000 "clearline"]
+	Line[149568 265680 149568 269616 1000 2000 "clearline"]
+	Line[147600 267648 151536 267648 1000 2000 "clearline"]
+	Line[149568 340464 149568 344400 1000 2000 "clearline"]
+	Line[147600 342432 151536 342432 1000 2000 "clearline"]
+	Line[232224 312912 232224 316848 1000 2000 "clearline"]
+	Line[230256 314880 234192 314880 1000 2000 "clearline"]
+	Line[232224 368016 232224 371952 1000 2000 "clearline"]
+	Line[230256 369984 234192 369984 1000 2000 "clearline"]
+	Line[401472 340464 401472 344400 1000 2000 "clearline"]
+	Line[399504 342432 403440 342432 1000 2000 "clearline"]
 )
-Layer(2 "ground")
+Layer(2 "bottom")
 (
 )
-Layer(3 "signal2")
+Layer(3 "silk")
 (
 )
-Layer(4 "signal3")
-(
-)
-Layer(5 "power")
-(
-)
-Layer(6 "bottom")
-(
-)
-Layer(7 "outline")
-(
-)
-Layer(8 "spare")
-(
-)
-Layer(9 "silk")
-(
-)
-Layer(10 "silk")
+Layer(4 "silk")
 (
 	Line[139764 135827 474409 135827 1000 2000 "clearline"]
 	Line[474409 135827 474409 277559 1000 2000 "clearline"]
@@ -852,5 +854,5 @@ Layer(10 "silk")
 	Line[149606 326772 149606 358268 1000 2000 "clearline"]
 	Line[133858 342520 165354 342520 1000 2000 "clearline"]
 	Text[147638 122047 0 100 "2.5mm dia" "clearline"]
-	Text[259843 299213 0 100 "6mm dia" "clearline"]
+	Text[259776 307008 0 100 "6.5mm dia" "clearline"]
 )
