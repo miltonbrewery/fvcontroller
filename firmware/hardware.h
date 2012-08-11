@@ -15,6 +15,8 @@
 #define RS485_XMIT_ON() OUTPUT_HIGH(PORTD,PD2)
 #define RS485_XMIT_OFF() OUTPUT_LOW(PORTD,PD2)
 
+extern void trigger_relay(uint8_t pin);
+
 #define VALVE1_SET PD4
 #define VALVE1_RESET PD5
 #define VALVE2_SET PD6

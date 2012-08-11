@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 
 #include "serial.h"
 #include "hardware.h"
@@ -8,7 +9,8 @@
 
 int main(void)
 {
-  char buf[16];
+  char buf[32];
+  int i;
   /* Hardware initialisation: our pins are single-direction apart from
      the pin used for one-wire bus.  Initialise the pin direction
      registers here. */
@@ -19,10 +21,20 @@ int main(void)
   /* Make sure we default to not transmitting */
   RS485_XMIT_OFF();
 
+  /* Relays should both be off */
+  trigger_relay(VALVE1_RESET);
+  trigger_relay(VALVE2_RESET);
+
   serial_init(9600);
-  
-  get_version(buf,16);
-  printf_P(PSTR("Hello world!  Firmware %s\n"),buf);
+
+  /* Init complete; we can now enable interrupts */
+  sei();
+
+  get_version(buf,32);
+  for (i=32; i>0; i--) {
+    printf_P(PSTR("Hello world!  Firmware %s\n"),buf);
+    printf_P(PSTR("Version string length is %d\n"),get_version_length());
+  }
 
   for (;;) {
     printf_P(PSTR("Backlight on\n"));
