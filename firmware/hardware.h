@@ -22,4 +22,13 @@ extern void trigger_relay(uint8_t pin);
 #define VALVE2_SET PD6
 #define VALVE2_RESET PD7
 
+/* LCD data is on bits 0--3 of PORTC */
+#define LCD_RS PC4
+#define LCD_E PC5
+
+extern void hw_init_lcd(void);
+extern void hw_lcd_byte(uint8_t byte, uint8_t rs);
+#define lcd_cmd(cmd) do { hw_lcd_byte((cmd),0); } while (0)
+#define lcd_data(data) do { hw_lcd_byte((data),1); } while (0)
+
 #endif /* _hardware_h */

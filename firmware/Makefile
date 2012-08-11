@@ -13,7 +13,7 @@ LDFLAGS  := -mmcu=$(AVR_MCU) -Wl
 
 all: fvcontroller.hex
 
-fvcontroller.elf: fvcontroller.o serial.o hardware.o version.o
+fvcontroller.elf: fvcontroller.o serial.o hardware.o version.o lcd.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 flash: fvcontroller.hex

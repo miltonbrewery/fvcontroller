@@ -6,6 +6,7 @@
 #include "serial.h"
 #include "hardware.h"
 #include "version.h"
+#include "lcd.h"
 
 int main(void)
 {
@@ -21,20 +22,28 @@ int main(void)
   /* Make sure we default to not transmitting */
   RS485_XMIT_OFF();
 
+  /* All LCD pins off */
+  PORTC=0;
+
   /* Relays should both be off */
   trigger_relay(VALVE1_RESET);
   trigger_relay(VALVE2_RESET);
 
   serial_init(9600);
+  hw_init_lcd();
 
-  /* Init complete; we can now enable interrupts */
+  /* Hardware init complete; we can now enable interrupts */
   sei();
+
+  lcd_init();
 
   get_version(buf,32);
   for (i=32; i>0; i--) {
     printf_P(PSTR("Hello world!  Firmware %s\n"),buf);
     printf_P(PSTR("Version string length is %d\n"),get_version_length());
   }
+
+  hello_lcd();
 
   for (;;) {
     printf_P(PSTR("Backlight on\n"));
