@@ -1,6 +1,6 @@
 AVR_MCU := atmega328p
 AVR_MCU_SPEED := 16000000UL
-AVRDUDE_OPTIONS := -q -P usb -c avrispv2 -p $(AVR_MCU)
+AVRDUDE_OPTIONS := -q -P usb -c avrispv2 -p $(AVR_MCU) -y
 
 VERSION := \"$(shell git describe --dirty)\"
 
@@ -13,7 +13,7 @@ LDFLAGS  := -mmcu=$(AVR_MCU) -Wl
 
 all: fvcontroller.hex
 
-fvcontroller.elf: fvcontroller.o serial.o hardware.o version.o lcd.o
+fvcontroller.elf: fvcontroller.o serial.o hardware.o lcd.o registers.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 flash: fvcontroller.hex
@@ -24,8 +24,8 @@ flash: fvcontroller.hex
 fuses:
 	avrdude $(AVRDUDE_OPTIONS) -U lfuse:w:0xc7:m -U hfuse:w:0xd1:m
 
-version.o: *.c *.h Makefile
-	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -o version.o -c version.c
+registers.o: *.c *.h Makefile
+	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -o registers.o -c registers.c
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $^
