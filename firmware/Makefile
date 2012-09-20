@@ -1,4 +1,4 @@
-AVR_MCU := atmega328p
+AVR_MCU := atmega328
 AVR_MCU_SPEED := 16000000UL
 AVRDUDE_OPTIONS := -q -P usb -c avrispv2 -p $(AVR_MCU) -y
 

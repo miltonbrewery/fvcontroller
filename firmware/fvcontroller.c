@@ -22,10 +22,11 @@ struct mode {
 
 struct mode modes[]={
   {"Ferment","22.0","23.0"},
-  {"Chill","6.0","6.5"},
+  {"Slow","20.0","21.0"},
+  {"Chill","7.5","8.0"},
   {"Off","95.0","96.0"},
 };
-#define mode_count 3
+#define mode_count 4
 
 static void set_mode(const struct mode *m)
 {
