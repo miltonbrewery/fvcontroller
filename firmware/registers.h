@@ -29,12 +29,17 @@ struct PROGMEM reg {
 };
 
 extern const struct reg *reg_number(uint8_t n);
+extern const struct reg *reg_by_name(const char *name);
+extern const struct reg *reg_by_name_P(const char *name);
 extern void reg_name(const struct reg *reg, char *buf); /* buf 9 bytes */
 extern void reg_description(const struct reg *reg, char *buf); /* buf 17 bytes */
 extern struct storage reg_storage(const struct reg *reg);
 extern void reg_read_string(const struct reg *reg, char *buf, size_t len);
-extern void reg_write_string(const struct reg *reg, char *buf);
+extern void reg_write_string(const struct reg *reg, const char *buf);
 
-extern struct reg ident;
+extern void record_error(uint8_t *err);
+
+/* Registers accessed by name in the code */
+extern struct reg ident,t0,v0,set_hi,set_lo,mode;
 
 #endif /* _registers_h */

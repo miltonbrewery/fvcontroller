@@ -1,0 +1,16 @@
+Addr  Len  Use
+0x000 16   Unused - may be corrupted on brownout
+0x010  8   t0/addr - 1-wire bus address of main temperature probe
+0x018  2   t0/c0 - calibration point 0
+0x01a  2   t0/c0r - what probe actually reads when at temp t0/c0
+0x01c  2   t0/c1 - calibration point 1 (currently unused)
+0x01e  2   t0/c1r - what probe actually reads when at temp t0/c1 (unused)
+0x020 16   t1/*  - as t0
+0x030 16   t2/*  - as t0
+0x040 16   t3/*  - as t0
+0x050  4   set/hi - temperature at which valve turns on
+0x054  4   set/lo - temperature at which valve turns off
+0x058  8   mode - mode name
+
+0x3f4  8   ident - station ident
+0x3fc  4   flashcnt - number of program reflash cycles (upated by avrdude)

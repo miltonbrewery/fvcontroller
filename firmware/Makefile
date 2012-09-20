@@ -13,11 +13,15 @@ LDFLAGS  := -mmcu=$(AVR_MCU) -Wl
 
 all: fvcontroller.hex
 
-fvcontroller.elf: fvcontroller.o serial.o hardware.o lcd.o registers.o
+fvcontroller.elf: fvcontroller.o serial.o hardware.o lcd.o registers.o owb.o \
+	temp.o buttons.o timer.o setup.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 flash: fvcontroller.hex
 	avrdude $(AVRDUDE_OPTIONS) -U flash:w:$<
+
+dump-eeprom:
+	avrdude $(AVRDUDE_OPTIONS) -U eeprom:r:-:i
 
 # The efuse only controls brownout detection, and doesn't read back
 # correctly because it has undefined bits in it.
@@ -37,4 +41,4 @@ registers.o: *.c *.h Makefile
 clean:
 	rm -f *.o *.elf *.hex *~
 
-.PHONY: all clean flash fuses
+.PHONY: all clean flash fuses dump-eeprom

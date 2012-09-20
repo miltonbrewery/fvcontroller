@@ -1,0 +1,49 @@
+We have a 16x2 LCD for the UI.
+
+When the UI is idle, we show a status display (one of several
+choices).  That's the easy bit.  We enter menu mode as soon as any
+button is pressed.
+
+The UI is based on hierarchical menus.  The current menu name always
+appears in the top row.  The UP and DOWN buttons are used to choose a
+submenu, and ENTER is used to select it.  There is always a **back**
+option that goes up a menu.
+
+Eventually you reach a menu that has no submenus; you choose an option
+instead.  The possible options appear as a menu, with the currently
+chosen option having a "*" against it.  Pressing ENTER sets the "*"
+against the current option; if the current option already has the "*"
+then pressing ENTER goes up a menu.
+
+
+Menu structure:
+
+Main menu
+  Ferment (*)
+  Chill (*)
+  Off (*)
+  Upper set point
+    Choose temp (*)
+  Lower set point
+    Choose temp (*)
+  View register
+    (All registers)
+  Setup
+    t0
+      Choose device
+        Device ID (*)
+      Calibration point
+        Choose temp (*)
+      Set calibration
+    t1
+      Choose device
+        Device ID (*)
+      Calibration point
+        Choose temp (*)
+      Set calibration
+    t2
+      Choose device
+        Device ID (*)
+      Calibration point
+        Choose temp (*)
+      Set calibration
