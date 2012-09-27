@@ -28,16 +28,17 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <string.h>
 #include "serial.h"
 #include "config.h"
-
-//static bool selected=false;
+#include "registers.h"
+#include "hardware.h"
 
 /* Receive buffer.  rxptr is the offset in buffer for the next
    received byte; 0xfe means "disabled until next '\n'", and 0xff
    means "disabled until command processing is done" */
 static uint8_t rxptr;
-static uint8_t rxbuf[SERIAL_RX_BUFSIZE];
+char rxbuf[SERIAL_RX_BUFSIZE];
 
 /* Transmit buffer.  txend is the first free byte of the buffer
    (i.e. next byte to be added will go there).  txnext is the next
@@ -46,6 +47,24 @@ static uint8_t rxbuf[SERIAL_RX_BUFSIZE];
    full and adding a character should block until there is space. */
 static uint8_t txend,txnext;
 static uint8_t txbuf[SERIAL_TX_BUFSIZE];
+
+uint8_t rx_data_available(void)
+{
+  return (rxptr==0xff);
+}
+
+void ack_rx_data(void)
+{
+  rxptr=0;
+}
+
+/* Immediately stop serial transmission */
+void serial_transmit_abort(void)
+{
+  cli();
+  txend=txnext=0;
+  sei();
+}
 
 /* Must be called with interrupts enabled */
 static int serial_transmit(char c, FILE *stream)
@@ -93,16 +112,30 @@ ISR(USART_RX_vect)
   rxbyte=UDR0;
   if (rxptr==0xfe) {
     /* Discard characters until '\n' is received */
-    if (rxbyte=='\n') {
+    if (rxbyte=='\n' || rxbyte=='\r') {
       rxptr=0;
       return;
     }
   } else if (rxptr==0xff) {
     /* Discard characters until command processing is finished */
     return;
-  } else if (rxbyte=='\n') {
+  } else if (rxbyte=='\n' || rxbyte=='\r') {
+    char selectcmd[9];
     /* Complete command received */
     rxbuf[rxptr]=0;
+    rxptr=0xff;
+    /* We deal with SELECT commands here in this interrupt routine,
+       because we want to be able to stop transmitting immediately on
+       receipt of a SELECT for a different unit.  The command is still
+       reported to the main loop in the usual way so it can issue an
+       ack and do book-keeping. */
+    strcpy_P(selectcmd,PSTR("SELECT "));
+    if (strncmp(selectcmd,rxbuf,7)==0) {
+      reg_read_string(&ident,selectcmd,9);
+      if (strcmp(&rxbuf[7],selectcmd)!=0) {
+	RS485_XMIT_OFF();
+      }
+    }
     rxptr=0xff;
     return;
   }

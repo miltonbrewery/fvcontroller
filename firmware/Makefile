@@ -9,12 +9,12 @@ LD       := avr-gcc
 ELF_SIZE := avr-size
 OBJCOPY  := avr-objcopy
 CFLAGS   := -mmcu=$(AVR_MCU) -DF_CPU=$(AVR_MCU_SPEED) -Wall -W -Werror -Os -std=c99
-LDFLAGS  := -mmcu=$(AVR_MCU) -Wl
+LDFLAGS  := -mmcu=$(AVR_MCU) -Wl,-u,vfprintf,-u,vfscanf -lscanf_flt -lprintf_flt -lm
 
 all: fvcontroller.hex
 
 fvcontroller.elf: fvcontroller.o serial.o hardware.o lcd.o registers.o owb.o \
-	temp.o buttons.o timer.o setup.o
+	temp.o buttons.o timer.o setup.o command.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 flash: fvcontroller.hex
@@ -39,6 +39,6 @@ registers.o: *.c *.h Makefile
 	$(ELF_SIZE) $^
 
 clean:
-	rm -f *.o *.elf *.hex *~
+	rm -f *.o *.elf fvcontroller.hex *~
 
 .PHONY: all clean flash fuses dump-eeprom

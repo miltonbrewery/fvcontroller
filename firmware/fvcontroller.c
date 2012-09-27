@@ -2,6 +2,7 @@
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
+#include <avr/eeprom.h>
 
 #include "config.h"
 #include "serial.h"
@@ -13,44 +14,38 @@
 #include "timer.h"
 #include "setup.h"
 #include "temp.h"
+#include "command.h"
 
-struct mode {
-  char name[8];
-  char lo[8];
-  char hi[8];
-};
-
-struct mode modes[]={
-  {"Ferment","22.0","23.0"},
-  {"Slow","20.0","21.0"},
-  {"Chill","7.5","8.0"},
-  {"Off","95.0","96.0"},
-};
-#define mode_count 4
-
-static void set_mode(const struct mode *m)
-{
-  reg_write_string(&set_lo,m->lo);
-  reg_write_string(&set_hi,m->hi);
-  reg_write_string(&mode,m->name);
-}
 static void choose_mode(void)
 {
-  struct mode *m;
+  const struct reg *mr;
+  char mn[8];
+  char name[9];
+  char lo[5];
+  char hi[5];
   char buf[32];
-  int mode;
+  int m;
   uint16_t timeout=0;
 
   BACKLIGHT_ON();
-  lcd_message_P(PSTR("Choose mode..."));
-  _delay_ms(1000);
-
   ack_buttons();
 
   do {
-    for (mode=0; mode<mode_count; mode++) {
-      m=&modes[mode];
-      sprintf_P(buf,PSTR("%s\n%s-%s"),m->name,m->lo,m->hi);
+    for (m=0; ; m++) {
+      sprintf_P(mn,PSTR("m%d/name"),m);
+      mr=reg_by_name(mn);
+      if (!mr) {
+	m=0;
+	break;
+      }
+      reg_read_string(mr,name,9);
+      sprintf_P(mn,PSTR("m%d/lo"),m);
+      mr=reg_by_name(mn);
+      reg_read_string(mr,lo,5);
+      sprintf_P(mn,PSTR("m%d/hi"),m);
+      mr=reg_by_name(mn);
+      reg_read_string(mr,hi,5);
+      sprintf_P(buf,PSTR("%s\n%s-%s"),name,lo,hi);
       lcd_message(buf);
       for (timeout=10000; timeout>0; timeout--) {
 	if (get_buttons()==K_UP) {
@@ -62,7 +57,9 @@ static void choose_mode(void)
 	  break;
 	} else if (get_buttons()==K_ENTER) {
 	  ack_buttons();
-	  set_mode(m);
+	  reg_write_string(&set_lo,lo);
+	  reg_write_string(&set_hi,hi);
+	  reg_write_string(&mode,name);
 	  BACKLIGHT_OFF();
 	  return;
 	}
@@ -72,8 +69,15 @@ static void choose_mode(void)
       if (timeout==0) break;
     }
   } while (timeout>0);
+}
 
-  BACKLIGHT_OFF();
+static void trigger_backlight(void)
+{
+  struct storage s;
+  s=reg_storage(&bl);
+  cli();
+  backlight_timer=eeprom_read_word((void *)s.loc.eeprom.start);
+  sei();
 }
 
 int main(void)
@@ -115,8 +119,14 @@ int main(void)
      initiate a new one.  (Eventually we'll read multiple sensors, but
      we only have one configured at the moment.) */
   tprobe_timer=TEMPERATURE_PROBE_PERIOD;
+  trigger_backlight();
   for (;;) {
     lcd_home_screen();
+    if (backlight_timer!=0) {
+      BACKLIGHT_ON();
+    } else {
+      BACKLIGHT_OFF();
+    }
     if (get_buttons()) {
       if (get_buttons()==(K_UP|K_DOWN)) {
 	/* We leave this main loop when entering setup mode because it
@@ -126,11 +136,16 @@ int main(void)
 	choose_mode();
       }
       ack_buttons();
+      trigger_backlight();
     }
     if (tprobe_timer==0) {
       read_probes();
       owb_start_temp_conversion();
       tprobe_timer=TEMPERATURE_PROBE_PERIOD;
+    }
+    if (rx_data_available()) {
+      process_command();
+      ack_rx_data();
     }
   }
   return 0;

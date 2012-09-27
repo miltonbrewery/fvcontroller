@@ -25,9 +25,11 @@ void timer_init(void)
 }
 
 uint8_t tprobe_timer;
+uint16_t backlight_timer;
 
 ISR(TIMER1_COMPA_vect)
 {
   buttons_poll();
   if (tprobe_timer>0) tprobe_timer--;
+  if (backlight_timer!=0xffff && backlight_timer>0) backlight_timer--;
 }

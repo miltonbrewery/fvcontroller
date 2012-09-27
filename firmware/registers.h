@@ -11,6 +11,7 @@ struct storage {
     } eeprom;
     void *ram;
     const void *progmem;
+    uint8_t pin;
   } loc;
   uint8_t slen; /* How many bytes of buffer is required to read as a string */
 };
@@ -18,7 +19,7 @@ struct storage {
 struct reg;
 
 typedef void (*readstr_fn)(const struct reg *reg,char *buf,size_t len);
-typedef void (*writestr_fn)(const struct reg *reg,const char *buf);
+typedef uint8_t (*writestr_fn)(const struct reg *reg,const char *buf);
 
 struct PROGMEM reg {
   const char name[8];
@@ -35,11 +36,12 @@ extern void reg_name(const struct reg *reg, char *buf); /* buf 9 bytes */
 extern void reg_description(const struct reg *reg, char *buf); /* buf 17 bytes */
 extern struct storage reg_storage(const struct reg *reg);
 extern void reg_read_string(const struct reg *reg, char *buf, size_t len);
-extern void reg_write_string(const struct reg *reg, const char *buf);
+/* Returns 0 for success, non-zero for failure */
+extern uint8_t reg_write_string(const struct reg *reg, const char *buf);
 
 extern void record_error(uint8_t *err);
 
 /* Registers accessed by name in the code */
-extern struct reg ident,t0,v0,set_hi,set_lo,mode;
+extern struct reg ident,bl,t0,v0,v0_s,v1_s,set_hi,set_lo,mode;
 
 #endif /* _registers_h */

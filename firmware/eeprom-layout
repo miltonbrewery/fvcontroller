@@ -11,6 +11,13 @@ Addr  Len  Use
 0x050  4   set/hi - temperature at which valve turns on
 0x054  4   set/lo - temperature at which valve turns off
 0x058  8   mode - mode name
+0x060  8   m0/name - mode 0 name
+0x068  4   m0/lo - mode 0 lo temp
+0x06c  4   m0/hi - mode 0 hi temp
+0x070 16   m1/*  - as m0
+0x080 16   m2/*  - as m0
+0x090 16   m3/*  - as m0
 
+0x3f2  2   bl - backlight timeout in tenths of a second
 0x3f4  8   ident - station ident
 0x3fc  4   flashcnt - number of program reflash cycles (upated by avrdude)

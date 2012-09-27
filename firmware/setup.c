@@ -40,8 +40,6 @@ void sensor_setup(void)
 
   BACKLIGHT_ON();
 
-  printf("addr=%p\n",addr);
-
   lcd_message_P(PSTR("Please wait...\nfinding sensors"));
   /* The sensors may be in the middle of a conversion.  Wait for it to
      finish. */
@@ -87,7 +85,6 @@ void sensor_setup(void)
       for (timeout=60000; timeout>0; timeout--) {
 	if (get_buttons()==K_UP) {
 	  ack_buttons();
-	  BACKLIGHT_OFF();
 	  return;
 	} else if (get_buttons()==K_DOWN) {
 	  ack_buttons();
@@ -103,5 +100,4 @@ void sensor_setup(void)
       if (timeout==0) break;
     }
   } while (timeout>0);
-  BACKLIGHT_OFF();
 }

@@ -10,6 +10,13 @@ void trigger_relay(uint8_t pin)
     OUTPUT_LOW(PORTD, pin);
 }  
 
+/* 0 is closed, 1 is open */
+uint8_t read_valve(uint8_t pin)
+{
+  if (PINB & (1<<pin)) return 0;
+  return 1;
+}
+
 static void lcd_pulse_e(void)
 {
   OUTPUT_HIGH(PORTC,LCD_E);

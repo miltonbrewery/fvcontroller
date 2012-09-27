@@ -1,7 +1,10 @@
+#include <stdio.h>
 #include <avr/pgmspace.h>
+#include <avr/eeprom.h>
 #include "registers.h"
 #include "hardware.h"
 #include "lcd_hw.h"
+#include "temp.h"
 
 #define ROW1 0x00
 #define ROW2 0x40
@@ -19,30 +22,52 @@ static void fixed_str(const char *str, uint8_t len)
   }
 }
 
+static void var_str(const char *str)
+{
+  char c;
+  while ((c=*str++)) lcd_data(c);
+}
+
 /* Draw the "idle" display */
 void lcd_home_screen(void)
 {
-  char buf[9];
+  char buf[16];
+  struct storage s;
+  int32_t s_hi,s_lo;
+  float tf,slf,shf;
   lcd_cmd(LCD_DISPCTL(1,0,0)); /* No cursor */
   lcd_cmd(LCD_DDADDR(ROW1));
   /* Top left is station name, up to 8 characters */
   reg_read_string(&ident,buf,9);
-  fixed_str(buf,8);
+  var_str(buf);
   lcd_data(' ');
-  /* Top right is current mode, up to 7 characters */
-  reg_read_string(&mode,buf,9);
-  fixed_str(buf,7);
+  /* Now current set range */
+  s=reg_storage(&set_lo);
+  eeprom_read_block(&s_lo,(void *)s.loc.eeprom.start,4);
+  slf=s_lo/10000.0;
+  s=reg_storage(&set_hi);
+  eeprom_read_block(&s_hi,(void *)s.loc.eeprom.start,4);
+  shf=s_hi/10000.0;
+  snprintf_P(buf,16,PSTR("%0.1f-%0.1f"),(double)slf,(double)shf);
+  var_str(buf);
+  lcd_data(' ');
+  lcd_data(' ');
   /* Next line */
   lcd_cmd(LCD_DDADDR(ROW2));
   /* Bottom left is current temp, up to 5 characters */
-  reg_read_string(&t0,buf,8);
+  tf=t0_temp/10000.0;
+  snprintf_P(buf,9,PSTR("%0.1f"),(double)tf);
+  fixed_str(buf,5);
+  lcd_data(' ');
+  /* Current mode */
+  reg_read_string(&mode,buf,9);
   fixed_str(buf,7);
   lcd_data(' ');
-  lcd_data(' ');
-  lcd_data(' ');
-  /* Bottom right is valve state */
-  reg_read_string(&v0,buf,8);
-  fixed_str(buf,6);
+  /* Bottom right is valve state truncated to 1 character */
+  reg_read_string(&v0,buf,2);
+  fixed_str(buf,1);
+  reg_read_string(&v0_s,buf,2);
+  fixed_str(buf,1);
 }
 
 void lcd_message(const char *message)

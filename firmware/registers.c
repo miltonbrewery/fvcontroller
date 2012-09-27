@@ -8,6 +8,7 @@
 #include "registers.h"
 #include "owb.h"
 #include "temp.h"
+#include "hardware.h"
 
 static void eeprom_string_read(const struct reg *reg, char *buf, size_t len)
 {
@@ -21,11 +22,12 @@ static void eeprom_string_read(const struct reg *reg, char *buf, size_t len)
   buf[len-1]=0;
 }
 
-static void eeprom_string_write(const struct reg *reg, const char *buf)
+static uint8_t eeprom_string_write(const struct reg *reg, const char *buf)
 {
   struct storage s;
   s=reg_storage(reg);
   eeprom_write_block(buf,(void *)s.loc.eeprom.start,s.loc.eeprom.length);
+  return 0;
 }
 
 static void eeprom_uint32_read_bigendian(const struct reg *reg,
@@ -50,10 +52,13 @@ static void eeprom_uint16_read(const struct reg *reg, char *buf, size_t len)
   snprintf_P(buf,len,PSTR("%" PRIu16),r);
 }
 
-static void eeprom_uint16_write(const struct reg *reg, const char *buf)
+static uint8_t eeprom_uint16_write(const struct reg *reg, const char *buf)
 {
-  (void)reg;
-  (void)buf;
+  struct storage s=reg_storage(reg);
+  uint16_t r;
+  if (sscanf_P(buf,PSTR("%u"),&r)!=1) return 1;
+  eeprom_write_word((void *)s.loc.eeprom.start,r);
+  return 0;
 }
 
 static const char version_string[] PROGMEM = VERSION;
@@ -74,24 +79,22 @@ static void owb_addr_read(const struct reg *reg, char *buf, size_t len)
   owb_format_addr(addr,buf,len);
 }
 
-static void owb_addr_write(const struct reg *reg, const char *buf)
+static uint8_t owb_addr_write(const struct reg *reg, const char *buf)
 {
   (void)reg;
   (void)buf;
+  return 1;
 }
 
-/* XXX *_temperature_* known not to work with negative temperatures yet! */
 static void temperature_string_read(const struct reg *reg, char *buf, size_t len)
 {
   struct storage s;
   s=reg_storage(reg);
   int32_t t;
-  int16_t temp;
-  int16_t frac;
+  float tf;
   t=*(int32_t *)s.loc.ram;
-  temp=t/10000;
-  frac=t%10000;
-  snprintf_P(buf,len,PSTR("%" PRIi16 ".%04" PRIi16),temp,frac);
+  tf=t/10000.0;
+  snprintf_P(buf,len,PSTR("%f"),(double)tf);
   buf[len-1]=0;
 }
 
@@ -101,26 +104,24 @@ static void eeprom_temperature_string_read(const struct reg *reg,
   struct storage s;
   s=reg_storage(reg);
   int32_t t;
-  int16_t temp;
-  int16_t frac;
+  float tf;
   eeprom_read_block(&t,(void *)s.loc.eeprom.start,4);
-  temp=t/10000;
-  frac=t%10000;
-  snprintf_P(buf,len,PSTR("%" PRIi16 ".%04" PRIi16),temp,frac);
+  tf=t/10000.0;
+  snprintf_P(buf,len,PSTR("%f"),(double)tf);
   buf[len-1]=0;
 }
 
-static void eeprom_temperature_string_write(const struct reg *reg,
-					    const char *buf)
+static uint8_t eeprom_temperature_string_write(const struct reg *reg,
+					       const char *buf)
 {
   struct storage s;
   int32_t t;
-  int16_t temp;
-  int16_t frac;
+  float tf;
   s=reg_storage(reg);
-  sscanf_P(buf,PSTR("%i.%i"),&temp,&frac);
-  t=((int32_t)temp*10000)+(int32_t)frac;
+  if (sscanf_P(buf,PSTR("%f"),&tf)!=1) return 1;
+  t=(int32_t)(tf*10000.0);
   eeprom_write_block(&t,(void *)s.loc.eeprom.start,4);
+  return 0;
 }
 
 static void valve_state_read(const struct reg *reg, char *buf, size_t len)
@@ -129,6 +130,20 @@ static void valve_state_read(const struct reg *reg, char *buf, size_t len)
   s=reg_storage(reg);
   uint8_t state;
   state=*(uint8_t *)s.loc.ram;
+  if (state==0) {
+    strncpy_P(buf,PSTR("Closed"),len);
+  } else {
+    strncpy_P(buf,PSTR("Open"),len);
+  }
+  buf[len-1]=0;
+}
+
+static void valve_switch_read(const struct reg *reg, char *buf, size_t len)
+{
+  struct storage s;
+  s=reg_storage(reg);
+  uint8_t state;
+  state=read_valve(s.loc.pin);
   if (state==0) {
     strncpy_P(buf,PSTR("Closed"),len);
   } else {
@@ -154,6 +169,15 @@ struct reg ident={
   .storage.slen=9,
   .readstr=eeprom_string_read,
   .writestr=eeprom_string_write,
+};
+
+struct reg bl={
+  .name="bl",
+  .description="Backlight time",
+  .storage.loc.eeprom={0x3f2,0x02},
+  .storage.slen=6,
+  .readstr=eeprom_uint16_read,
+  .writestr=eeprom_uint16_write,
 };
 
 static struct reg version={
@@ -197,10 +221,24 @@ static struct reg t0_c0r={
 };
 struct reg v0={
   .name="v0",
-  .description="Valve 0",
+  .description="Valve 0 state",
   .storage.loc.ram=&v0_state,
   .storage.slen=7,
   .readstr=valve_state_read,
+};
+struct reg v0_s={
+  .name="v0/s",
+  .description="Valve 0 readback",
+  .storage.loc.pin=VALVE1_STATE,
+  .storage.slen=7,
+  .readstr=valve_switch_read,
+};
+struct reg v1_s={
+  .name="v1/s",
+  .description="Valve 1 readback",
+  .storage.loc.pin=VALVE2_STATE,
+  .storage.slen=7,
+  .readstr=valve_switch_read,
 };
 struct reg set_hi={
   .name="set/hi",
@@ -227,10 +265,44 @@ struct reg mode={
   .writestr=eeprom_string_write,
 };
 
+#define moderegs(mode,addr)	 \
+  static struct reg mode##_name={		\
+    .name=#mode "/name",			\
+    .description="Mode " #mode " name",		\
+    .storage.loc.eeprom={addr,0x08},		\
+    .storage.slen=9,				\
+    .readstr=eeprom_string_read,		\
+    .writestr=eeprom_string_write,		\
+  };						\
+  static struct reg mode##_lo={			\
+    .name=#mode "/lo",				\
+    .description="Mode " #mode " low set",	\
+    .storage.loc.eeprom={addr+8,0x04},		\
+    .storage.slen=5,				\
+    .readstr=eeprom_string_read,		\
+    .writestr=eeprom_string_write,		\
+  };						\
+  static struct reg mode##_hi={			\
+    .name=#mode "/hi",				\
+    .description="Mode " #mode " hi set",	\
+    .storage.loc.eeprom={addr+12,0x04},		\
+    .storage.slen=5,				\
+    .readstr=eeprom_string_read,		\
+    .writestr=eeprom_string_write,		\
+  };
+moderegs(m0,0x060);
+moderegs(m1,0x070);
+moderegs(m2,0x080);
+moderegs(m3,0x090);
+
 static const PROGMEM struct reg *all_registers[]={
-  &ident, &flashcount, &version,
-  &t0,&t0_id,&t0_c0,&t0_c0r,&v0,
+  &ident, &flashcount, &version, &bl,
+  &t0,&t0_id,&t0_c0,&t0_c0r,&v0,&v0_s,&v1_s,
   &set_hi,&set_lo,&mode,
+  &m0_name,&m0_lo,&m0_hi,
+  &m1_name,&m1_lo,&m1_hi,
+  &m2_name,&m2_lo,&m2_hi,
+  &m3_name,&m3_lo,&m3_hi,
 };
 
 const struct reg *reg_number(uint8_t n)
@@ -294,12 +366,14 @@ void reg_read_string(const struct reg *reg, char *buf, size_t len)
   else
     buf[0]=0;
 }
-void reg_write_string(const struct reg *reg, const char *buf)
+uint8_t reg_write_string(const struct reg *reg, const char *buf)
 {
   writestr_fn writestr;
   memcpy_P(&writestr,&reg->writestr,sizeof(writestr_fn));
   if (writestr)
-    writestr(reg,buf);
+    return writestr(reg,buf);
+  else
+    return 1;
 }
 
 void record_error(uint8_t *err)
