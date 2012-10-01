@@ -192,7 +192,7 @@ struct reg t0={
   .name="t0",
   .description="t0 probe reading",
   .storage.loc.ram=&t0_temp,
-  .storage.slen=7,
+  .storage.slen=12,
   .readstr=temperature_string_read,
 };
 static struct reg t0_id={
@@ -244,7 +244,7 @@ struct reg set_hi={
   .name="set/hi",
   .description="Upper set point",
   .storage.loc.eeprom={0x050,0x04},
-  .storage.slen=7,
+  .storage.slen=12,
   .readstr=eeprom_temperature_string_read,
   .writestr=eeprom_temperature_string_write,
 };
@@ -252,7 +252,7 @@ struct reg set_lo={
   .name="set/lo",
   .description="Lower set point",
   .storage.loc.eeprom={0x054,0x04},
-  .storage.slen=7,
+  .storage.slen=12,
   .readstr=eeprom_temperature_string_read,
   .writestr=eeprom_temperature_string_write,
 };
