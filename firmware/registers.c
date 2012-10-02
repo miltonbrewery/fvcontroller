@@ -154,7 +154,7 @@ static void valve_switch_read(const struct reg *reg, char *buf, size_t len)
 
 /* avrdude can maintain a reprogramming count in the last four bytes of
    eeprom with the -y option */
-struct reg flashcount={
+const struct reg flashcount={
   .name="flashcnt",
   .description="Reprogram count",
   .storage.loc.eeprom={0x03fc,0x04},
@@ -162,7 +162,7 @@ struct reg flashcount={
   .readstr=eeprom_uint32_read_bigendian,
 };
 
-struct reg ident={
+const struct reg ident={
   .name="ident",
   .description="Station ident",
   .storage.loc.eeprom={0x03f4,0x08},
@@ -171,7 +171,7 @@ struct reg ident={
   .writestr=eeprom_string_write,
 };
 
-struct reg bl={
+const struct reg bl={
   .name="bl",
   .description="Backlight time",
   .storage.loc.eeprom={0x3f2,0x02},
@@ -180,7 +180,7 @@ struct reg bl={
   .writestr=eeprom_uint16_write,
 };
 
-static struct reg version={
+static const struct reg version={
   .name="ver",
   .description="Firmware version",
   .storage.loc.progmem=version_string,
@@ -188,14 +188,14 @@ static struct reg version={
   .readstr=version_string_read,
 };
 
-struct reg t0={
+const struct reg t0={
   .name="t0",
   .description="t0 probe reading",
   .storage.loc.ram=&t0_temp,
   .storage.slen=12,
   .readstr=temperature_string_read,
 };
-static struct reg t0_id={
+static const struct reg t0_id={
   .name="t0/id",
   .description="t0 probe address",
   .storage.loc.eeprom={0x010,0x08},
@@ -203,7 +203,7 @@ static struct reg t0_id={
   .readstr=owb_addr_read,
   .writestr=owb_addr_write,
 };
-static struct reg t0_c0={
+static const struct reg t0_c0={
   .name="t0/c0",
   .description="t0 cal point 0",
   .storage.loc.eeprom={0x018,0x02},
@@ -211,7 +211,7 @@ static struct reg t0_c0={
   .readstr=eeprom_uint16_read,
   .writestr=eeprom_uint16_write,
 };
-static struct reg t0_c0r={
+static const struct reg t0_c0r={
   .name="t0/c0r",
   .description="t0 reading at c0",
   .storage.loc.eeprom={0x01a,0x02},
@@ -219,28 +219,28 @@ static struct reg t0_c0r={
   .readstr=eeprom_uint16_read,
   .writestr=eeprom_uint16_write,
 };
-struct reg v0={
+const struct reg v0={
   .name="v0",
   .description="Valve 0 state",
   .storage.loc.ram=&v0_state,
   .storage.slen=7,
   .readstr=valve_state_read,
 };
-struct reg v0_s={
+const struct reg v0_s={
   .name="v0/s",
   .description="Valve 0 readback",
   .storage.loc.pin=VALVE1_STATE,
   .storage.slen=7,
   .readstr=valve_switch_read,
 };
-struct reg v1_s={
+const struct reg v1_s={
   .name="v1/s",
   .description="Valve 1 readback",
   .storage.loc.pin=VALVE2_STATE,
   .storage.slen=7,
   .readstr=valve_switch_read,
 };
-struct reg set_hi={
+const struct reg set_hi={
   .name="set/hi",
   .description="Upper set point",
   .storage.loc.eeprom={0x050,0x04},
@@ -248,7 +248,7 @@ struct reg set_hi={
   .readstr=eeprom_temperature_string_read,
   .writestr=eeprom_temperature_string_write,
 };
-struct reg set_lo={
+const struct reg set_lo={
   .name="set/lo",
   .description="Lower set point",
   .storage.loc.eeprom={0x054,0x04},
@@ -256,7 +256,7 @@ struct reg set_lo={
   .readstr=eeprom_temperature_string_read,
   .writestr=eeprom_temperature_string_write,
 };
-struct reg mode={
+const struct reg mode={
   .name="mode",
   .description="Mode name",
   .storage.loc.eeprom={0x058,0x08},
@@ -266,7 +266,7 @@ struct reg mode={
 };
 
 #define moderegs(mode,addr)	 \
-  static struct reg mode##_name={		\
+  static const struct reg mode##_name={		\
     .name=#mode "/name",			\
     .description="Mode " #mode " name",		\
     .storage.loc.eeprom={addr,0x08},		\
@@ -274,7 +274,7 @@ struct reg mode={
     .readstr=eeprom_string_read,		\
     .writestr=eeprom_string_write,		\
   };						\
-  static struct reg mode##_lo={			\
+  static const struct reg mode##_lo={		\
     .name=#mode "/lo",				\
     .description="Mode " #mode " low set",	\
     .storage.loc.eeprom={addr+8,0x04},		\
@@ -282,7 +282,7 @@ struct reg mode={
     .readstr=eeprom_string_read,		\
     .writestr=eeprom_string_write,		\
   };						\
-  static struct reg mode##_hi={			\
+  static const struct reg mode##_hi={		\
     .name=#mode "/hi",				\
     .description="Mode " #mode " hi set",	\
     .storage.loc.eeprom={addr+12,0x04},		\
@@ -295,7 +295,7 @@ moderegs(m1,0x070);
 moderegs(m2,0x080);
 moderegs(m3,0x090);
 
-static const PROGMEM struct reg *all_registers[]={
+static const PROGMEM struct reg *const all_registers[]={
   &ident, &flashcount, &version, &bl,
   &t0,&t0_id,&t0_c0,&t0_c0r,&v0,&v0_s,&v1_s,
   &set_hi,&set_lo,&mode,
