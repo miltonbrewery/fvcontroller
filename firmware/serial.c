@@ -134,6 +134,18 @@ ISR(USART_RX_vect)
       reg_read_string(&ident,selectcmd,9);
       if (strcmp(&rxbuf[7],selectcmd)!=0) {
 	RS485_XMIT_OFF();
+      } else {
+	/* I didn't originally want to put this here - I thought we
+	   could enable the transmitter when the main loop picked up
+	   the command.  It turns out that this leads to corrupt data
+	   being received at the head end occasionally after a SELECT
+	   command, presumably because the gap between one transmitter
+	   turning off and the next turning on is being interpreted as
+	   a start bit.  I'll try this as an experiment; if it doesn't
+	   improve things I'll look at delaying the previous
+	   transmitter turning off so that the bus never ends up in an
+	   undriven state. */
+	RS485_XMIT_ON();
       }
     }
     rxptr=0xff;
