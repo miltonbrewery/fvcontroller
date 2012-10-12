@@ -133,6 +133,7 @@ ISR(USART_RX_vect)
     if (strncmp(selectcmd,rxbuf,7)==0) {
       reg_read_string(&ident,selectcmd,9);
       if (strcmp(&rxbuf[7],selectcmd)!=0) {
+	_delay_us(100); /* Overlap changeover */
 	RS485_XMIT_OFF();
       } else {
 	/* I didn't originally want to put this here - I thought we
@@ -141,11 +142,9 @@ ISR(USART_RX_vect)
 	   being received at the head end occasionally after a SELECT
 	   command, presumably because the gap between one transmitter
 	   turning off and the next turning on is being interpreted as
-	   a start bit.  I'll try this as an experiment; if it doesn't
-	   improve things I'll look at delaying the previous
-	   transmitter turning off so that the bus never ends up in an
-	   undriven state. */
+	   a start bit. */
 	RS485_XMIT_ON();
+	_delay_us(100); /* Overlap changeover */
       }
     }
     rxptr=0xff;
