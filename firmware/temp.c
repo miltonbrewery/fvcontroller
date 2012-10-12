@@ -16,6 +16,7 @@ int32_t t0_temp;
 int32_t t1_temp;
 int32_t t2_temp;
 uint8_t v0_state;
+uint8_t v1_state;
 
 void read_probes(void)
 {

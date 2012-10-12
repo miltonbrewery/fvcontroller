@@ -68,11 +68,11 @@ void lcd_home_screen(void)
     if (read_valve(VALVE1_STATE)) {
       buf[0]='|'; /* Fully open */
     } else {
-      buf[0]='/'; /* Opening */
+      buf[0]='O'; /* Opening */
     }
   } else {
     if (read_valve(VALVE1_STATE)) {
-      buf[0]='\\'; /* Closing */
+      buf[0]='o'; /* Closing */
     } else {
       buf[0]='-'; /* Closed */
     }

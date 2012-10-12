@@ -128,26 +128,20 @@ static void valve_state_read(const struct reg *reg, char *buf, size_t len)
 {
   struct storage s;
   s=reg_storage(reg);
-  uint8_t state;
-  state=*(uint8_t *)s.loc.ram;
-  if (state==0) {
-    strncpy_P(buf,PSTR("Closed"),len);
+  uint8_t state,sw;
+  if (s.loc.pin==0) {
+    state=v0_state;
+    sw=read_valve(VALVE1_STATE);
   } else {
-    strncpy_P(buf,PSTR("Open"),len);
+    state=v1_state;
+    sw=read_valve(VALVE2_STATE);
   }
-  buf[len-1]=0;
-}
-
-static void valve_switch_read(const struct reg *reg, char *buf, size_t len)
-{
-  struct storage s;
-  s=reg_storage(reg);
-  uint8_t state;
-  state=read_valve(s.loc.pin);
-  if (state==0) {
-    strncpy_P(buf,PSTR("Closed"),len);
+  if (state) {
+    if (sw) strncpy_P(buf,PSTR("Open"),len);
+    else strncpy_P(buf,PSTR("Opening"),len);
   } else {
-    strncpy_P(buf,PSTR("Open"),len);
+    if (sw) strncpy_P(buf,PSTR("Closing"),len);
+    else strncpy_P(buf,PSTR("Closed"),len);
   }
   buf[len-1]=0;
 }
@@ -222,23 +216,16 @@ static const struct reg t0_c0r={
 const struct reg v0={
   .name="v0",
   .description="Valve 0 state",
-  .storage.loc.ram=&v0_state,
-  .storage.slen=7,
+  .storage.loc.pin=0,
+  .storage.slen=8,
   .readstr=valve_state_read,
 };
-const struct reg v0_s={
-  .name="v0/s",
-  .description="Valve 0 readback",
-  .storage.loc.pin=VALVE1_STATE,
-  .storage.slen=7,
-  .readstr=valve_switch_read,
-};
-const struct reg v1_s={
-  .name="v1/s",
-  .description="Valve 1 readback",
-  .storage.loc.pin=VALVE2_STATE,
-  .storage.slen=7,
-  .readstr=valve_switch_read,
+const struct reg v1={
+  .name="v1",
+  .description="Valve 1 state",
+  .storage.loc.pin=1,
+  .storage.slen=8,
+  .readstr=valve_state_read,
 };
 const struct reg set_hi={
   .name="set/hi",
@@ -297,7 +284,7 @@ moderegs(m3,0x090);
 
 static const PROGMEM struct reg *const all_registers[]={
   &ident, &flashcount, &version, &bl,
-  &t0,&t0_id,&t0_c0,&t0_c0r,&v0,&v0_s,&v1_s,
+  &t0,&t0_id,&t0_c0,&t0_c0r,&v0,&v1,
   &set_hi,&set_lo,&mode,
   &m0_name,&m0_lo,&m0_hi,
   &m1_name,&m1_lo,&m1_hi,
