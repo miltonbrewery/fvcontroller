@@ -34,7 +34,7 @@ def full_reset(s):
     
 class ConnectionHandler(SocketServer.StreamRequestHandler):
     def handle(self):
-        print("Connection opened.")
+#        print("Connection opened.")
         for data in self.rfile:
             data=data.strip()
             print(data)
@@ -46,13 +46,13 @@ class ConnectionHandler(SocketServer.StreamRequestHandler):
                 self.wfile.write(response)
             except:
                 break
-            print(response)
+#            print(response)
 #        s.write("SELECT NONE\n")
 #        s.flush()
         # Wait for this command to complete before we drop the connection.
         # 12 bytes at 960 bytes per second is about 0.013s
 #        time.sleep(0.013)
-        print("Connection closed.")
+#        print("Connection closed.")
     
 if __name__=="__main__":
     HOST,PORT="localhost",1576
