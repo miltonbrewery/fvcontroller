@@ -13,6 +13,7 @@
 
 import serial
 import SocketServer
+import time
 
 def full_reset(s):
     """Return the bus to a known state: terminate any previous command
@@ -33,8 +34,10 @@ def full_reset(s):
     
 class ConnectionHandler(SocketServer.StreamRequestHandler):
     def handle(self):
+        print("Connection opened.")
         for data in self.rfile:
             data=data.strip()
+            print(data)
             s.write("%s\n"%data)
             response=s.readline()
             if response=="": response="TIMEOUT\n"
@@ -43,14 +46,20 @@ class ConnectionHandler(SocketServer.StreamRequestHandler):
                 self.wfile.write(response)
             except:
                 break
-        s.write("SELECT NONE\n")
+            print(response)
+#        s.write("SELECT NONE\n")
+#        s.flush()
+        # Wait for this command to complete before we drop the connection.
+        # 12 bytes at 960 bytes per second is about 0.013s
+#        time.sleep(0.013)
+        print("Connection closed.")
     
 if __name__=="__main__":
     HOST,PORT="localhost",1576
 
     server=SocketServer.TCPServer((HOST,PORT),ConnectionHandler)
 
-    s=serial.Serial("/dev/ttyUSB0",timeout=1)
+    s=serial.Serial("/dev/ttyUSB0",timeout=0.5)
     full_reset(s)
 
     server.serve_forever()
