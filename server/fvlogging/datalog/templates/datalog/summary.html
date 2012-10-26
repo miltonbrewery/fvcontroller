@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<table>
+<tr><th>Vessel</th><th>Temperature</th><th>Mode</th><th>Low</th><th>High</th></tr>
+{% for c in controllers %}
+<tr>
+<td>{{c.ident}}</td>
+<td>{{c.regs.t0.value}}</td>
+<td>{{c.regs.mode.value}}</td>
+<td>{{c.regs.setlo.value}}</td>
+<td>{{c.regs.sethi.value}}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
