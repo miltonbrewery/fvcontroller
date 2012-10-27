@@ -37,7 +37,7 @@ class ConnectionHandler(SocketServer.StreamRequestHandler):
 #        print("Connection opened.")
         for data in self.rfile:
             data=data.strip()
-            print(data)
+#            print(data)
             s.write("%s\n"%data)
             response=s.readline()
             if response=="": response="TIMEOUT\n"
