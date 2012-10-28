@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <table>
-<tr><th>Vessel</th><th>Temperature</th><th>Mode</th><th>Low</th><th>High</th><th>Valve</th></tr>
+<tr><th>Vessel</th><th>Temperature</th><th>Mode</th><th>Low</th><th>High</th><th>Valve</th><th></th></tr>
 {% for c in controllers %}
 <tr>
 <td><a href="{{c.get_absolute_url}}">{{c.ident}}</a></td>
@@ -10,6 +10,7 @@
 <td>{{c.regs.setlo.value}}</td>
 <td>{{c.regs.sethi.value}}</td>
 <td>{{c.regs.v0.value}}</td>
+<td><a href="{% url datalog-csvfile c.ident "t0" %}">Download CSV</a></td>
 </tr>
 {% endfor %}
 </table>

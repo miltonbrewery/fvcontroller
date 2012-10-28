@@ -4,6 +4,7 @@ from django.http import HttpResponse,HttpResponseRedirect,Http404
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from datalog.models import *
+import csv
 
 def summary(request):
     controllers=Controller.objects.all()
@@ -29,3 +30,22 @@ def detail(request,name,config=False):
                                'registers':registers,
                                'config':config,},
                               context_instance=RequestContext(request))
+
+def series_csv(request,name,register):
+    try:
+        controller=Controller.objects.get(ident=name)
+    except:
+        raise Http404
+    try:
+        register=controller.register_set.get(name=register)
+    except:
+        raise Http404
+    dt=DATATYPE_DICT[register.datatype]
+    series=dt.objects.filter(register=register).order_by('timestamp')
+    r=HttpResponse(mimetype="text/csv")
+    r['Content-Disposition']='attachment; filename=%s-%s.csv'%(
+        controller.ident,register.name.replace('/','-'))
+    c=csv.writer(r)
+    for d in series:
+        c.writerow((d.timestamp,d.data))
+    return r
