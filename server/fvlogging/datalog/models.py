@@ -1,6 +1,7 @@
 from django.db import models
 import socket
-import time
+import time,datetime
+import django.utils.timezone
 
 class Controller(models.Model):
     """A controller that can be present on a RS485 bus.  Has a number
@@ -78,6 +79,9 @@ class Datum(models.Model):
         abstract=True
     register=models.ForeignKey("Register")
     timestamp=models.DateTimeField()
+    @staticmethod
+    def cast(value):
+        return value
 
 class StringDatum(Datum):
     data=models.TextField()
@@ -85,17 +89,25 @@ class StringDatum(Datum):
 
 class FloatDatum(Datum):
     data=models.FloatField()
-    def __unicode__(self): return self.data
+    def __unicode__(self): return u"%0.2f"%self.data
+    @staticmethod
+    def cast(value):
+        return float(value)
 
 class IntegerDatum(Datum):
     data=models.IntegerField()
-    def __unicode__(self): return self.data
+    def __unicode__(self): return u"%d"%self.data
+    @staticmethod
+    def cast(value):
+        return int(value)
 
 DATATYPES=(
     ('S',StringDatum),
     ('F',FloatDatum),
     ('I',IntegerDatum),
 )
+
+DATATYPE_DICT=dict(DATATYPES)
 
 class Register(models.Model):
     """A register found in a controller.  We log values found in these
@@ -115,9 +127,40 @@ class Register(models.Model):
     max_interval=models.IntegerField() # In seconds
     config=models.BooleanField() # Is this a configuration register?
     def __unicode__(self):
-        return self.name
-    def value(self):
-        return self.controller.read(self.name)
+        return "%s %s"%(self.controller,self.name)
+    def value(self,force_check=False):
+        # Read most recent (up to) two datapoints.
+        dt=DATATYPE_DICT[self.datatype]
+        dpl=dt.objects.filter(register=self).order_by('-timestamp')[:2]
+        # If there are zero datapoints, we always record a new one.
+        # Otherwise, we check to see how old the most recent datapoint
+        # is, and consider recording a new one if it is more than
+        # max_interval seconds old.
+        if len(dpl)==0 or force_check or (
+            (django.utils.timezone.now()-dpl[0].timestamp)
+            > datetime.timedelta(seconds=self.max_interval)):
+            val=dt.cast(self.controller.read(self.name))
+            if (len(dpl)>0 and val==dpl[0].data and len(dpl)==2 and
+                dpl[0].data==dpl[1].data):
+                # No change, and we already have two datapoints in a
+                # row with this value.  We just update the timestamp
+                # on the most recent.
+                dpl[0].timestamp=django.utils.timezone.now()
+                dpl[0].save()
+                dp=dpl[0]
+            else:
+                # We record a new datapoint.
+                dp=dt(register=self,timestamp=django.utils.timezone.now(),
+                      data=val)
+                dp.save()
+        else:
+            # Return the most recent datapoint - it isn't time to check
+            # the hardware yet
+            dp=dpl[0]
+        return dp
     def set(self,value):
-        return self.controller.write(self.name,value)
-        
+        rv=self.controller.write(self.name,value)
+        # After setting a register we force a readback from the hardware,
+        # ignoring the timestamp on the most recently recorded datapoint.
+        self.value(force_check=True)
+        return rv
