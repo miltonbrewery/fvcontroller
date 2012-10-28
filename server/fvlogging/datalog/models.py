@@ -13,11 +13,13 @@ class Controller(models.Model):
     description=models.TextField()
     address=models.TextField()
     port=models.IntegerField()
+    active=models.BooleanField()
     def connect(self):
         """Return a file-like connection to the RS485 bus, with this
         controller selected, or None if there is a failure.
 
         """
+        if not self.active: return None
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         try:
             s.connect((self.address,self.port))
@@ -67,21 +69,15 @@ class Controller(models.Model):
         return {x.name.replace('/',''):x for x in self.register_set.all()}
     def __unicode__(self):
         return self.ident
-
-class Datapoint(models.Model):
-    """A collection of field values taken from a controller at a
-    particular point in time (typically over a single TCP connection
-    to the bus controller).
-
-    """
-    controller=models.ForeignKey(Controller)
-    timestamp=models.DateTimeField()
+    @models.permalink
+    def get_absolute_url(self):
+        return ('datalog-controller',[self.ident])
 
 class Datum(models.Model):
     class Meta:
         abstract=True
-    datapoint=models.ForeignKey(Datapoint)
     register=models.ForeignKey("Register")
+    timestamp=models.DateTimeField()
 
 class StringDatum(Datum):
     data=models.TextField()
@@ -113,14 +109,15 @@ class Register(models.Model):
     # descending from an abstract base class
     datatype=models.CharField(max_length=1,choices=DATATYPES)
     unit=models.CharField(max_length=10,null=True,blank=True)
-    # How often should we check to see if the value has changed?  If our
-    # most recent record is older than this, ask over the RS485 bus again
+    readonly=models.BooleanField()
+    # If the most recent recorded value is older than this, read it
+    # again from the hardware rather than the database
     max_interval=models.IntegerField() # In seconds
-    # If our most recent record is newer than this, don't ask over the bus
-    min_interval=models.IntegerField() # In seconds
+    config=models.BooleanField() # Is this a configuration register?
     def __unicode__(self):
         return self.name
     def value(self):
         return self.controller.read(self.name)
     def set(self,value):
         return self.controller.write(self.name,value)
+        

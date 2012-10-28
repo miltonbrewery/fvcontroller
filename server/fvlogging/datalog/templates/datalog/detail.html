@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{controller.description}}</h1>
+
+<form action="" method="post">{% csrf_token %}
+<table>
+<tr><th>Register</th><th>Value</th><th>New value</th></tr>
+{% for r in registers %}
+<tr><td>{{r.description}}</td><td>{{r.value}}{{r.unit}}</td>
+<td>{% if not r.readonly %}
+<input type="text" name="{{r.name}}" id="td_{{r.name}}" />
+{% endif %}</td></tr>
+{% endfor %}
+</table>
+<input type="submit" name="set" value="Alter registers" />
+</form>
+
+{% if not config %}<p><a href="config/">Click here for configuration registers</a></p>{% endif %}
+
+{% endblock %}
