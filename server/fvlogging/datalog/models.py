@@ -1,7 +1,11 @@
 from django.db import models
 import socket
 import time,datetime
-import django.utils.timezone
+try:
+    import django.utils.timezone
+    now=django.utils.timezone.now
+except:
+    now=datetime.datetime.now
 
 class Controller(models.Model):
     """A controller that can be present on a RS485 bus.  Has a number
@@ -137,7 +141,7 @@ class Register(models.Model):
         # is, and consider recording a new one if it is more than
         # max_interval seconds old.
         if len(dpl)==0 or force_check or (
-            (django.utils.timezone.now()-dpl[0].timestamp)
+            (now()-dpl[0].timestamp)
             > datetime.timedelta(seconds=self.max_interval)):
             val=dt.cast(self.controller.read(self.name))
             if (len(dpl)>0 and val==dpl[0].data and len(dpl)==2 and
@@ -145,12 +149,12 @@ class Register(models.Model):
                 # No change, and we already have two datapoints in a
                 # row with this value.  We just update the timestamp
                 # on the most recent.
-                dpl[0].timestamp=django.utils.timezone.now()
+                dpl[0].timestamp=now()
                 dpl[0].save()
                 dp=dpl[0]
             else:
                 # We record a new datapoint.
-                dp=dt(register=self,timestamp=django.utils.timezone.now(),
+                dp=dt(register=self,timestamp=now(),
                       data=val)
                 dp.save()
         else:
