@@ -47,5 +47,5 @@ def series_csv(request,name,register):
         controller.ident,register.name.replace('/','-'))
     c=csv.writer(r)
     for d in series:
-        c.writerow((d.timestamp,d.data))
+        c.writerow((d.timestamp.strftime("%Y-%m-%d %H:%M:%S"),d.data))
     return r
