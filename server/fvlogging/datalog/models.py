@@ -143,7 +143,13 @@ class Register(models.Model):
         if len(dpl)==0 or force_check or (
             (now()-dpl[0].timestamp)
             > datetime.timedelta(seconds=self.max_interval)):
-            val=dt.cast(self.controller.read(self.name))
+            r=self.controller.read(self.name)
+            if not r:
+                # Reading from the hardware failed.  We return the most
+                # recent value if there is one, or None.
+                if len(dpl)>0: return dpl[0]
+                else: return None
+            val=dt.cast(r)
             if (len(dpl)>0 and val==dpl[0].data and len(dpl)==2 and
                 dpl[0].data==dpl[1].data):
                 # No change, and we already have two datapoints in a
