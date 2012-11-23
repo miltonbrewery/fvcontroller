@@ -182,37 +182,41 @@ static const struct reg version={
   .readstr=version_string_read,
 };
 
-const struct reg t0={
-  .name="t0",
-  .description="t0 probe reading",
-  .storage.loc.ram=&t0_temp,
-  .storage.slen=12,
-  .readstr=temperature_string_read,
-};
-static const struct reg t0_id={
-  .name="t0/id",
-  .description="t0 probe address",
-  .storage.loc.eeprom={0x010,0x08},
-  .storage.slen=17,
-  .readstr=owb_addr_read,
-  .writestr=owb_addr_write,
-};
-static const struct reg t0_c0={
-  .name="t0/c0",
-  .description="t0 cal point 0",
-  .storage.loc.eeprom={0x018,0x02},
-  .storage.slen=6,
-  .readstr=eeprom_uint16_read,
-  .writestr=eeprom_uint16_write,
-};
-static const struct reg t0_c0r={
-  .name="t0/c0r",
-  .description="t0 reading at c0",
-  .storage.loc.eeprom={0x01a,0x02},
-  .storage.slen=6,
-  .readstr=eeprom_uint16_read,
-  .writestr=eeprom_uint16_write,
-};
+#define proberegs(probe,addr)			\
+  static const struct reg probe={		\
+    .name=#probe,				\
+    .description=#probe " probe reading",	\
+    .storage.loc.ram=&probe##_temp,		\
+    .storage.slen=12,				\
+    .readstr=temperature_string_read,		\
+  };						\
+  static const struct reg probe##_id={		\
+    .name=#probe "/id",				\
+    .description=#probe " probe address",	\
+    .storage.loc.eeprom={addr,0x08},		\
+    .storage.slen=17,				\
+    .readstr=owb_addr_read,			\
+    .writestr=owb_addr_write,			\
+  };						\
+  static const struct reg probe##_c0={		\
+    .name=#probe "/c0",				\
+    .description=#probe " cal point 0",		\
+    .storage.loc.eeprom={addr+0x8,0x02},	\
+    .storage.slen=6,				\
+    .readstr=eeprom_uint16_read,		\
+    .writestr=eeprom_uint16_write,		\
+  };						\
+  static const struct reg probe##_c0r={		\
+    .name=#probe "/c0r",			\
+    .description=#probe " reading at c0",	\
+    .storage.loc.eeprom={addr+0xa,0x02},	\
+    .storage.slen=6,				\
+    .readstr=eeprom_uint16_read,		\
+    .writestr=eeprom_uint16_write,		\
+  };
+
+proberegs(t0,0x010);
+
 const struct reg v0={
   .name="v0",
   .description="Valve 0 state",
@@ -284,7 +288,8 @@ moderegs(m3,0x090);
 
 static const PROGMEM struct reg *const all_registers[]={
   &ident, &flashcount, &version, &bl,
-  &t0,&t0_id,&t0_c0,&t0_c0r,&v0,&v1,
+  &t0,&t0_id,&t0_c0,&t0_c0r,
+  &v0,&v1,
   &set_hi,&set_lo,&mode,
   &m0_name,&m0_lo,&m0_hi,
   &m1_name,&m1_lo,&m1_hi,
