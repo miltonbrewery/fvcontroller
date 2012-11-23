@@ -19,8 +19,7 @@ extern int owb_count_devices(void);
 /* Start temperature conversion */
 extern void owb_start_temp_conversion(void);
 
-/* Read temperature */
-#define BAD_TEMP 0x7FFFFFFF
+/* Read temperature - returns BAD_TEMP if reading failed */
 extern int32_t owb_read_temp(uint8_t *id);
 
 /* Format a bus address for output */

@@ -98,8 +98,12 @@ static void temperature_string_read(const struct reg *reg, char *buf, size_t len
   int32_t t;
   float tf;
   t=*(int32_t *)s.loc.ram;
-  tf=t/10000.0;
-  snprintf_P(buf,len,PSTR("%f"),(double)tf);
+  if (t==BAD_TEMP) {
+    snprintf_P(buf,len,PSTR("None"));
+  } else {
+    tf=t/10000.0;
+    snprintf_P(buf,len,PSTR("%f"),(double)tf);
+  }
   buf[len-1]=0;
 }
 

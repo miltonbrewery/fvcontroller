@@ -12,10 +12,10 @@
    temperature in the firmware is a ten-thousandth of a degree in an
    int32_t. */
 
-int32_t t0_temp;
-int32_t t1_temp;
-int32_t t2_temp;
-int32_t t3_temp;
+int32_t t0_temp=BAD_TEMP;
+int32_t t1_temp=BAD_TEMP;
+int32_t t2_temp=BAD_TEMP;
+int32_t t3_temp=BAD_TEMP;
 uint8_t v0_state;
 uint8_t v1_state;
 
@@ -24,16 +24,17 @@ void read_probes(void)
   uint8_t addr[8];
   const struct reg *r;
   struct storage s;
-  int32_t t;
   int32_t s_hi,s_lo;
   uint8_t old_v0;
 
   r=reg_by_name_P(PSTR("t0/id"));
   s=reg_storage(r);
   eeprom_read_block(addr,(void *)s.loc.eeprom.start,8);
-  t=owb_read_temp(addr);
-  if (t!=BAD_TEMP) t0_temp=t;
+  t0_temp=owb_read_temp(addr);
   //  printf("t0_temp=%" PRIi32 "\n",t0_temp);
+
+  /* Don't be a thermostat if we don't have a reading */
+  if (t0_temp==BAD_TEMP) return;
 
   /* Read s_hi and s_lo from eeprom */
   s=reg_storage(&set_hi);

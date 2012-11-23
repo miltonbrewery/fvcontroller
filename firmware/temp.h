@@ -5,6 +5,8 @@
 
 extern void read_probes(void);
 
+#define BAD_TEMP 0x7FFFFFFF
+
 extern int32_t t0_temp;
 extern int32_t t1_temp;
 extern int32_t t2_temp;

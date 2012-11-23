@@ -55,10 +55,15 @@ void lcd_home_screen(void)
   /* Next line */
   lcd_cmd(LCD_DDADDR(ROW2));
   /* Bottom left is current temp, up to 5 characters */
-  tf=t0_temp/10000.0;
-  snprintf_P(buf,9,PSTR("%0.1f"),(double)tf);
+  if (t0_temp==BAD_TEMP) {
+    sprintf_P(buf,PSTR("XXXXX"));
+  } else {
+    tf=t0_temp/10000.0;
+    snprintf_P(buf,9,PSTR("%0.1f"),(double)tf);
+  }
   fixed_str(buf,5);
   lcd_data(' ');
+
   /* Current mode */
   reg_read_string(&mode,buf,9);
   fixed_str(buf,8);

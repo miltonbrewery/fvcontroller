@@ -7,6 +7,7 @@
 #include <util/atomic.h>
 
 #include "owb.h"
+#include "temp.h"
 #include "registers.h"
 
 #define OWB_READ() ( (PINB & (1<<PB0))==(1<<PB0))
