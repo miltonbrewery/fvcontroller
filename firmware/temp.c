@@ -15,6 +15,7 @@
 int32_t t0_temp;
 int32_t t1_temp;
 int32_t t2_temp;
+int32_t t3_temp;
 uint8_t v0_state;
 uint8_t v1_state;
 

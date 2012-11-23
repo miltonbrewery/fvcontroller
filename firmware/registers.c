@@ -216,6 +216,9 @@ static const struct reg version={
   };
 
 proberegs(t0,0x010);
+proberegs(t1,0x020);
+proberegs(t2,0x030);
+proberegs(t3,0x040);
 
 const struct reg v0={
   .name="v0",
@@ -289,6 +292,9 @@ moderegs(m3,0x090);
 static const PROGMEM struct reg *const all_registers[]={
   &ident, &flashcount, &version, &bl,
   &t0,&t0_id,&t0_c0,&t0_c0r,
+  &t1,&t1_id,&t1_c0,&t1_c0r,
+  &t2,&t2_id,&t2_c0,&t2_c0r,
+  &t3,&t3_id,&t3_c0,&t3_c0r,
   &v0,&v1,
   &set_hi,&set_lo,&mode,
   &m0_name,&m0_lo,&m0_hi,
