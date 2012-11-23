@@ -193,6 +193,29 @@ void owb_start_temp_conversion(void)
   owb_byte_wr(DS18X20_CONVERT_T);
 }
 
+/* Dallas/Maxim 8-bit CRC over a buffer.  If the last byte of the buffer
+   is its CRC then this will return 0 if the buffer is valid. */
+static uint8_t owb_crc(const uint8_t *buf,int len)
+{
+  int i,j;
+  uint8_t crc=0,b,bit;
+  for (i=0; i<len; i++) {
+    b=buf[i];
+    for (j=8; j>0; j--) {
+      bit=((crc^b)&0x01);
+      if (bit) {
+	crc^=0x18;
+	crc>>=1;
+	crc|=0x80;
+      } else {
+	crc>>=1;
+      }
+      b>>=1;
+    }
+  }
+  return crc;
+}
+
 /* XXX not checked with negative temperatures */
 int32_t owb_read_temp(uint8_t *id)
 {
@@ -208,7 +231,7 @@ int32_t owb_read_temp(uint8_t *id)
   for (i=0; i<9; i++) {
     sp[i]=owb_byte_rd();
   }
-  /* XXX check CRC of scratchpad */
+  if (owb_crc(sp,9)!=0) return BAD_TEMP;
   temp=((sp[1]<<8)|sp[0])*625L;
   return temp;
 }
