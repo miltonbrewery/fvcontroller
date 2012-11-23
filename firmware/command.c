@@ -5,6 +5,7 @@
 #include "serial.h"
 #include "registers.h"
 #include "hardware.h"
+#include "owb.h"
 
 static uint8_t selected;
 
@@ -101,6 +102,33 @@ static void set_cmd(char *arg)
   }
 }
 
+static void scanbus_cmd(char *arg)
+{
+  int device_count,i;
+  uint8_t addr[8];
+  char buf[20];
+  (void)arg;
+  device_count=owb_count_devices();
+  if (device_count==-1) {
+    printf_P(PSTR("ERR Bus shorted to ground\n"));
+    return;
+  }
+  if (device_count==-2) {
+    printf_P(PSTR("ERR Bus shorted to +5v\n"));
+    return;
+  }
+  printf_P(PSTR("OK %d sensors found"),device_count);
+  if (device_count>0) {
+    for (i=0; i<device_count; i++) {
+      owb_get_addr(addr,i);
+      owb_format_addr(addr,buf,sizeof(buf));
+      printf_P(PSTR(" "));
+      printf(buf);
+    }
+  }
+  printf_P(PSTR("\n"));
+}
+
 void process_command(void)
 {
   uint8_t len;
@@ -115,8 +143,11 @@ void process_command(void)
       set_cmd(&rxbuf[len]);
     } else if ((len=it_is(PSTR("HELP ")))) {
       help_cmd(&rxbuf[len]);
+    } else if ((len=it_is(PSTR("SCANBUS")))) {
+      scanbus_cmd(&rxbuf[len]);
     } else {
-      printf_P(PSTR("ERR Unknown command; try SELECT, READ, SET, HELP reg\n"));
+      printf_P(PSTR("ERR Unknown command; try SELECT, READ, SET, "
+		    "HELP reg, SCANBUS\n"));
     }
   }
 }
