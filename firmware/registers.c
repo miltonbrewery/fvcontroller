@@ -81,8 +81,13 @@ static void owb_addr_read(const struct reg *reg, char *buf, size_t len)
 
 static uint8_t owb_addr_write(const struct reg *reg, const char *buf)
 {
-  (void)reg;
-  (void)buf;
+  struct storage s;
+  uint8_t addr[8];
+  s=reg_storage(reg);
+  if (owb_scan_addr(addr,buf)) {
+    eeprom_write_block(addr,(void *)s.loc.eeprom.start,8);
+    return 0;
+  }
   return 1;
 }
 

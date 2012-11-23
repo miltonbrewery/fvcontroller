@@ -212,10 +212,22 @@ int32_t owb_read_temp(uint8_t *id)
   return temp;
 }
 
-void owb_format_addr(uint8_t *addr, char *buf, size_t len)
+static const char PROGMEM owb_addr_fstr[]="%02X%02X%02X%02X%02X%02X%02X%02X";
+
+void owb_format_addr(const uint8_t *addr, char *buf, size_t len)
 {
-  snprintf_P(buf,len,PSTR("%02X%02X%02X%02X%02X%02X%02X%02X"),
+  snprintf_P(buf,len,owb_addr_fstr,
 	     addr[0],addr[1],addr[2],addr[3],
 	     addr[4],addr[5],addr[6],addr[7]);
   buf[len-1]=0;
+}
+
+int owb_scan_addr(uint8_t *addr, const char *buf)
+{
+  if (sscanf_P(buf,owb_addr_fstr,
+	       &addr[0],&addr[1],&addr[2],&addr[3],
+	       &addr[4],&addr[5],&addr[6],&addr[7])!=8) {
+    return 0;
+  }
+  return 1;
 }
