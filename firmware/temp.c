@@ -19,19 +19,32 @@ int32_t t3_temp=BAD_TEMP;
 uint8_t v0_state;
 uint8_t v1_state;
 
-void read_probes(void)
+/* NB expects name to be a pointer to a string in progmem */
+static int32_t read_probe(const char *name)
 {
   uint8_t addr[8];
   const struct reg *r;
   struct storage s;
+  char regname[9];
+
+  strncpy_P(regname,name,9);
+  strncat_P(regname,PSTR("/id"),9);
+  r=reg_by_name(regname);
+  s=reg_storage(r);
+  eeprom_read_block(addr,(void *)s.loc.eeprom.start,8);
+  return owb_read_temp(addr);
+}
+
+void read_probes(void)
+{
+  struct storage s;
   int32_t s_hi,s_lo;
   uint8_t old_v0;
 
-  r=reg_by_name_P(PSTR("t0/id"));
-  s=reg_storage(r);
-  eeprom_read_block(addr,(void *)s.loc.eeprom.start,8);
-  t0_temp=owb_read_temp(addr);
-  //  printf("t0_temp=%" PRIi32 "\n",t0_temp);
+  t0_temp=read_probe(PSTR("t0"));
+  t1_temp=read_probe(PSTR("t1"));
+  t2_temp=read_probe(PSTR("t2"));
+  t3_temp=read_probe(PSTR("t3"));
 
   /* Don't be a thermostat if we don't have a reading */
   if (t0_temp==BAD_TEMP) return;
