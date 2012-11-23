@@ -113,11 +113,12 @@ int main(void)
 
   lcd_init();
 
+  owb_start_temp_conversion();
+
   /* This is the main loop.  We listen for keypresses all the time and
      use them to drive a menu system.  Also, we wait for a 1s timer
      expiry; when the timer expires we take a temperature reading and
-     initiate a new one.  (Eventually we'll read multiple sensors, but
-     we only have one configured at the moment.) */
+     initiate a new one. */
   tprobe_timer=TEMPERATURE_PROBE_PERIOD;
   trigger_backlight();
   for (;;) {
