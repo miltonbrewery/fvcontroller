@@ -229,12 +229,22 @@ static void owb_match_rom(const uint8_t *id)
   }
 }
 
+static uint8_t is_null_id(const uint8_t *id)
+{
+  uint8_t i;
+  for (i=8; i>0; i--) {
+    if ((*id++)!=0xff) return 0;
+  }
+  return 1;
+}
+
 /* XXX not checked with negative temperatures */
 int32_t owb_read_temp(const uint8_t *id)
 {
   int32_t temp;
   uint8_t i;
   uint8_t sp[9];
+  if (is_null_id(id)) return BAD_TEMP;
   if (owb_reset()) return BAD_TEMP;
   owb_match_rom(id);
   owb_byte_wr(DS18X20_READ_POWER);
