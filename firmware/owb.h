@@ -5,6 +5,8 @@
 
 extern uint8_t owb_missing_cnt;
 extern uint8_t owb_shorted_cnt;
+extern uint8_t owb_crcerr_cnt;
+extern uint8_t owb_powererr_cnt;
 
 extern void owb_init(void);
 
@@ -20,7 +22,7 @@ extern int owb_count_devices(void);
 extern void owb_start_temp_conversion(void);
 
 /* Read temperature - returns BAD_TEMP if reading failed */
-extern int32_t owb_read_temp(uint8_t *id);
+extern int32_t owb_read_temp(const uint8_t *id);
 
 /* Format a bus address for output */
 extern void owb_format_addr(const uint8_t *addr, char *buf, size_t len);

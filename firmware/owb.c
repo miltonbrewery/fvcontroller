@@ -26,9 +26,13 @@
 /* DS18B20 commands */
 #define DS18X20_CONVERT_T 0x44
 #define DS18X20_READ 0xbe
+#define DS18X20_READ_POWER 0xb4
 
-uint8_t owb_missing_cnt; /* Error counter: no devices detected */
-uint8_t owb_shorted_cnt; /* Error counter: bus shorted */
+/* Error counters */
+uint8_t owb_missing_cnt; /* no devices detected */
+uint8_t owb_shorted_cnt; /* bus shorted */
+uint8_t owb_crcerr_cnt; /* bad CRC on temperature read */
+uint8_t owb_powererr_cnt; /* unpowered device found */
 
 void owb_init(void)
 {
@@ -216,22 +220,38 @@ static uint8_t owb_crc(const uint8_t *buf,int len)
   return crc;
 }
 
+static void owb_match_rom(const uint8_t *id)
+{
+  uint8_t i;
+  owb_byte_wr(OWB_MATCH_ROM);
+  for (i=8; i>0; i--) {
+    owb_byte_wr(*id++);
+  }
+}
+
 /* XXX not checked with negative temperatures */
-int32_t owb_read_temp(uint8_t *id)
+int32_t owb_read_temp(const uint8_t *id)
 {
   int32_t temp;
   uint8_t i;
   uint8_t sp[9];
   if (owb_reset()) return BAD_TEMP;
-  owb_byte_wr(OWB_MATCH_ROM);
-  for (i=8; i>0; i--) {
-    owb_byte_wr(*id++);
+  owb_match_rom(id);
+  owb_byte_wr(DS18X20_READ_POWER);
+  if (owb_byte_rd()!=0xff) { /* Not powered */
+    record_error(&owb_powererr_cnt);
+    return BAD_TEMP;
   }
+  if (owb_reset()) return BAD_TEMP;
+  owb_match_rom(id);
   owb_byte_wr(DS18X20_READ);
   for (i=0; i<9; i++) {
     sp[i]=owb_byte_rd();
   }
-  if (owb_crc(sp,9)!=0) return BAD_TEMP;
+  if (owb_crc(sp,9)!=0) { /* Bad CRC */
+    record_error(&owb_crcerr_cnt);
+    return BAD_TEMP;
+  }
   temp=((sp[1]<<8)|sp[0])*625L;
   return temp;
 }
