@@ -8,6 +8,7 @@
 #include "setup.h"
 #include "lcd.h"
 #include "owb.h"
+#include "temp.h"
 #include "hardware.h"
 #include "registers.h"
 
@@ -35,7 +36,7 @@ void sensor_setup(void)
   char buf[32];
   char buf2[16];
   uint8_t addr[8];
-  uint32_t temp;
+  int32_t temp;
   uint16_t timeout=0;
 
   BACKLIGHT_ON();
@@ -79,7 +80,11 @@ void sensor_setup(void)
       owb_format_addr(addr,buf,sizeof(buf));
       strcat_P(buf,PSTR("\n"));
       temp=owb_read_temp(addr);
-      snprintf_P(buf2,sizeof(buf2),PSTR("%d Temp: %" PRIu32),i,temp);
+      if (temp==BAD_TEMP) {
+	snprintf_P(buf2,sizeof(buf2),PSTR("%d BAD_TEMP"),i);
+      } else {
+	snprintf_P(buf2,sizeof(buf2),PSTR("%d Temp: %" PRIi32),i,temp);
+      }
       strcat(buf,buf2);
       lcd_message(buf);
       for (timeout=60000; timeout>0; timeout--) {
