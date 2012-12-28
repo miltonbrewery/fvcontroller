@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
+#include <util/atomic.h>
 #include "registers.h"
 #include "owb.h"
 #include "temp.h"
@@ -131,6 +132,48 @@ static uint8_t eeprom_temperature_string_write(const struct reg *reg,
   t=(int32_t)(tf*10000.0);
   eeprom_write_block(&t,(void *)s.loc.eeprom.start,4);
   return 0;
+}
+
+static void error_counter_read(const struct reg *reg, char *buf, size_t len)
+{
+  struct storage s;
+  s=reg_storage(reg);
+  snprintf_P(buf,len,PSTR("%d"),*(uint8_t *)s.loc.ram);
+  buf[len-1]=0;
+}
+
+static uint8_t error_counter_write(const struct reg *reg, const char *buf)
+{
+  struct storage s;
+  s=reg_storage(reg);
+  unsigned int dec;
+  uint8_t ok;
+  uint8_t *err;
+  err=(uint8_t *)s.loc.ram;
+  if (sscanf_P(buf,PSTR("%u"),&dec)!=1) return 1;
+  /* Unlike all the other registers, writing to an error counter
+     _decreases_ the value in the counter by the amount that you
+     write, rather than setting the value.  This enables errors to be
+     acknowledged without losing errors that occur between a read and
+     subsequent write of the register.
+
+     It is an error to try to decrease the counter by more than its
+     current value.
+
+     We disable interrupts while we decrease the counter because it is
+     possible that some error counters might be updated by interrupt
+     service routines (eg. serial RX errors, once I get around to
+     implementing that).
+  */
+  ok=0;
+  ATOMIC_BLOCK(ATOMIC_FORCEON) {
+    if (dec>*err) {
+      ok=1;
+    } else {
+      *err-=dec;
+    }
+  }
+  return ok;
 }
 
 static void valve_state_read(const struct reg *reg, char *buf, size_t len)
@@ -298,6 +341,39 @@ moderegs(m1,0x070);
 moderegs(m2,0x080);
 moderegs(m3,0x090);
 
+static const struct reg err_miss={
+  .name="err/miss",
+  .description="owb missing",
+  .storage.loc.ram=&owb_missing_cnt,
+  .storage.slen=4,
+  .readstr=error_counter_read,
+  .writestr=error_counter_write,
+};
+static const struct reg err_shrt={
+  .name="err/shrt",
+  .description="owb shorted",
+  .storage.loc.ram=&owb_shorted_cnt,
+  .storage.slen=4,
+  .readstr=error_counter_read,
+  .writestr=error_counter_write,
+};
+static const struct reg err_crc={
+  .name="err/crc",
+  .description="DS18B20 bad CRC",
+  .storage.loc.ram=&owb_crcerr_cnt,
+  .storage.slen=4,
+  .readstr=error_counter_read,
+  .writestr=error_counter_write,
+};
+static const struct reg err_pwr={
+  .name="err/pwr",
+  .description="DS18B20 no power",
+  .storage.loc.ram=&owb_powererr_cnt,
+  .storage.slen=4,
+  .readstr=error_counter_read,
+  .writestr=error_counter_write,
+};
+
 static const PROGMEM struct reg *const all_registers[]={
   &ident, &flashcount, &version, &bl,
   &t0,&t0_id,&t0_c0,&t0_c0r,
@@ -310,6 +386,7 @@ static const PROGMEM struct reg *const all_registers[]={
   &m1_name,&m1_lo,&m1_hi,
   &m2_name,&m2_lo,&m2_hi,
   &m3_name,&m3_lo,&m3_hi,
+  &err_miss,&err_shrt,&err_crc,&err_pwr,
 };
 
 const struct reg *reg_number(uint8_t n)
