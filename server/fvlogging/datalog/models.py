@@ -88,21 +88,27 @@ class Datum(models.Model):
         return value
 
 class StringDatum(Datum):
-    data=models.TextField()
-    def __unicode__(self): return self.data
+    data=models.TextField(null=True)
+    def __unicode__(self): return u"%s"%self.data
 
 class FloatDatum(Datum):
-    data=models.FloatField()
-    def __unicode__(self): return u"%0.2f"%self.data
+    data=models.FloatField(null=True)
+    def __unicode__(self):
+        if self.data: return u"%0.2f"%self.data
+        return u"None"
     @staticmethod
     def cast(value):
+        if value=="None": return None
         return float(value)
 
 class IntegerDatum(Datum):
-    data=models.IntegerField()
-    def __unicode__(self): return u"%d"%self.data
+    data=models.IntegerField(null=True)
+    def __unicode__(self):
+        if self.data: return u"%d"%self.data
+        return u"None"
     @staticmethod
     def cast(value):
+        if value=="None": return None
         return int(value)
 
 DATATYPES=(
