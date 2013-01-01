@@ -17,4 +17,9 @@
 
 {% if not config %}<p><a href="config/">Click here for configuration registers</a></p>{% endif %}
 
+{% if not config %}
+<p>Last 7 days:</p>
+<img src="{% url datalog-graph %}?series={{controller}}:t0:black&series={{controller}}:set/lo:blue&series={{controller}}:set/hi:red&start=7&leftmargin=0&bottommargin=0" />
+{% endif %}
+
 {% endblock %}
