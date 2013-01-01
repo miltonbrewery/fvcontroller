@@ -180,3 +180,14 @@ class Register(models.Model):
         # ignoring the timestamp on the most recently recorded datapoint.
         self.value(force_check=True)
         return rv
+
+class NoteType(models.Model):
+    desc=models.TextField()
+
+class Note(models.Model):
+    controller=models.ForeignKey(Controller)
+    type=models.ForeignKey(NoteType)
+    timestamp=models.DateTimeField()
+    data=models.TextField()
+    class Meta:
+        ordering=['-timestamp']
