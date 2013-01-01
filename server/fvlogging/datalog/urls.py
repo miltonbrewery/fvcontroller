@@ -9,4 +9,5 @@ urlpatterns=patterns(
     (r'^detail/(?P<name>\w+)/config/$','detail',{'config':True}),
     url(r'^series/(?P<name>\w+)-(?P<register>\w+/?\w*).csv$','series_csv',
         name="datalog-csvfile"),
+    url(r'^graph.svg','graph',name="datalog-graph"),
 )
