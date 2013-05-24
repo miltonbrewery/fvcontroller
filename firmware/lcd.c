@@ -68,19 +68,26 @@ void lcd_home_screen(void)
   reg_read_string(&mode,buf,9);
   fixed_str(buf,8);
   lcd_data(' ');
-  /* Bottom right is valve state truncated to 1 character */
-  if (v0_state) {
-    if (read_valve(VALVE1_STATE)) {
-      buf[0]='|'; /* Fully open */
-    } else {
-      buf[0]='O'; /* Opening */
-    }
-  } else {
-    if (read_valve(VALVE1_STATE)) {
-      buf[0]='o'; /* Closing */
-    } else {
-      buf[0]='-'; /* Closed */
-    }
+  /* Bottom right is valve state as 1 character */
+  switch (get_valve_state()) {
+  case VALVE_CLOSED:
+    buf[0]='-';
+    break;
+  case VALVE_OPENING:
+    buf[0]='O';
+    break;
+  case VALVE_OPEN:
+    buf[0]='|';
+    break;
+  case VALVE_CLOSING:
+    buf[0]='C';
+    break;
+  case VALVE_ERROR:
+    buf[0]='E';
+    break;
+  default:
+    buf[0]='?';
+    break;
   }
   fixed_str(buf,1);
 }

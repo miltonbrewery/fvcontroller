@@ -62,6 +62,24 @@ static uint8_t eeprom_uint16_write(const struct reg *reg, const char *buf)
   return 0;
 }
 
+static void eeprom_uint8_read(const struct reg *reg, char *buf, size_t len)
+{
+  uint8_t r;
+  struct storage s;
+  s=reg_storage(reg);
+  r=eeprom_read_byte((void *)s.loc.eeprom.start);
+  snprintf_P(buf,len,PSTR("%" PRIu8),r);
+}
+
+static uint8_t eeprom_uint8_write(const struct reg *reg, const char *buf)
+{
+  struct storage s=reg_storage(reg);
+  uint8_t r;
+  if (sscanf_P(buf,PSTR("%u"),&r)!=1) return 1;
+  eeprom_write_byte((void *)s.loc.eeprom.start,r);
+  return 0;
+}
+
 static const char version_string[] PROGMEM = VERSION;
 
 static void version_string_read(const struct reg *reg, char *buf, size_t len)
@@ -178,22 +196,23 @@ static uint8_t error_counter_write(const struct reg *reg, const char *buf)
 
 static void valve_state_read(const struct reg *reg, char *buf, size_t len)
 {
-  struct storage s;
-  s=reg_storage(reg);
-  uint8_t state,sw;
-  if (s.loc.pin==0) {
-    state=v0_state;
-    sw=read_valve(VALVE1_STATE);
-  } else {
-    state=v1_state;
-    sw=read_valve(VALVE2_STATE);
-  }
-  if (state) {
-    if (sw) strncpy_P(buf,PSTR("Open"),len);
-    else strncpy_P(buf,PSTR("Opening"),len);
-  } else {
-    if (sw) strncpy_P(buf,PSTR("Closing"),len);
-    else strncpy_P(buf,PSTR("Closed"),len);
+  (void)reg;
+  switch (get_valve_state()) {
+  case VALVE_CLOSED:
+    strncpy_P(buf,PSTR("Closed"),len);
+    break;
+  case VALVE_OPENING:
+    strncpy_P(buf,PSTR("Opening"),len);
+    break;
+  case VALVE_OPEN:
+    strncpy_P(buf,PSTR("Open"),len);
+    break;
+  case VALVE_CLOSING:
+    strncpy_P(buf,PSTR("Closing"),len);
+    break;
+  default:
+    strncpy_P(buf,PSTR("Error"),len);
+    break;
   }
   buf[len-1]=0;
 }
@@ -215,6 +234,15 @@ const struct reg ident={
   .storage.slen=9,
   .readstr=eeprom_string_read,
   .writestr=eeprom_string_write,
+};
+
+const struct reg vtype={
+  .name="vtype",
+  .description="Valve type",
+  .storage.loc.eeprom={0x3f1,0x01},
+  .storage.slen=4,
+  .readstr=eeprom_uint8_read,
+  .writestr=eeprom_uint8_write,
 };
 
 const struct reg bl={
@@ -274,15 +302,8 @@ proberegs(t3,0x040);
 
 const struct reg v0={
   .name="v0",
-  .description="Valve 0 state",
+  .description="Valve state",
   .storage.loc.pin=0,
-  .storage.slen=8,
-  .readstr=valve_state_read,
-};
-const struct reg v1={
-  .name="v1",
-  .description="Valve 1 state",
-  .storage.loc.pin=1,
   .storage.slen=8,
   .readstr=valve_state_read,
 };
@@ -380,7 +401,7 @@ static const PROGMEM struct reg *const all_registers[]={
   &t1,&t1_id,&t1_c0,&t1_c0r,
   &t2,&t2_id,&t2_c0,&t2_c0r,
   &t3,&t3_id,&t3_c0,&t3_c0r,
-  &v0,&v1,
+  &v0,&vtype,
   &set_hi,&set_lo,&mode,
   &m0_name,&m0_lo,&m0_hi,
   &m1_name,&m1_lo,&m1_hi,

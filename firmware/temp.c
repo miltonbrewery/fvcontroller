@@ -16,8 +16,9 @@ int32_t t0_temp=BAD_TEMP;
 int32_t t1_temp=BAD_TEMP;
 int32_t t2_temp=BAD_TEMP;
 int32_t t3_temp=BAD_TEMP;
-uint8_t v0_state;
-uint8_t v1_state;
+uint8_t v0_state; /* Desired valve state: 0=closed, 1=open */
+uint8_t v1_output_on;
+uint8_t v2_output_on;
 
 /* NB expects name to be a pointer to a string in progmem */
 static int32_t read_probe(const char *name)
@@ -39,7 +40,7 @@ void read_probes(void)
 {
   struct storage s;
   int32_t s_hi,s_lo;
-  uint8_t old_v0;
+  uint8_t valve;
 
   t0_temp=read_probe(PSTR("t0"));
   t1_temp=read_probe(PSTR("t1"));
@@ -55,18 +56,98 @@ void read_probes(void)
   s=reg_storage(&set_lo);
   eeprom_read_block(&s_lo,(void *)s.loc.eeprom.start,4);
 
-  /* Be a thermostat! */
-  old_v0=v0_state;
+  /* Read valve mode from eeprom */
+  s=reg_storage(&vtype);
+  valve=eeprom_read_byte((void *)s.loc.eeprom.start);
+  
+  /* Be a thermostat, with valve opened to provide chilling */
   if (t0_temp>s_hi) {
     v0_state=1;
   }
   if (t0_temp<s_lo) {
     v0_state=0;
   }
-  if (old_v0==0 && v0_state==1) {
-    trigger_relay(VALVE1_SET);
+
+  switch (valve) {
+  case 0:
+  case 0xff:
+    /* Spring-return valve on VALVE1, nothing on VALVE2 */
+    if (v0_state && !v1_output_on) {
+      trigger_relay(VALVE1_SET);
+      v1_output_on=1;
+    }
+    if (!v0_state && v1_output_on) {
+      trigger_relay(VALVE1_RESET);
+      v1_output_on=0;
+    }
+    break;
+  case 1: /* Ball valve: open on VALVE1, close on VALVE2, no limit sensors */
+  case 2: /* As case 1, but with limit sensors */
+    if (v0_state) {
+      /* VALVE1 should be energised, VALVE2 should be de-energised */
+      if (v2_output_on) {
+	trigger_relay(VALVE2_RESET);
+	v2_output_on=0;
+      }
+      if (!v1_output_on) {
+	trigger_relay(VALVE1_SET);
+	v1_output_on=1;
+      }
+    } else {
+      /* VALVE1 should be de-energised, VALVE2 should be energised */
+      if (v1_output_on) {
+	trigger_relay(VALVE1_RESET);
+	v1_output_on=0;
+      }
+      if (!v2_output_on) {
+	trigger_relay(VALVE2_SET);
+	v2_output_on=1;
+      }
+    }
+    break;
   }
-  if (old_v0==1 && v0_state==0) {
-    trigger_relay(VALVE1_RESET);
+}
+
+uint8_t get_valve_state(void)
+{
+  struct storage s;
+  uint8_t valve,v1,v2;
+
+  /* Read valve mode from eeprom */
+  s=reg_storage(&vtype);
+  valve=eeprom_read_byte((void *)s.loc.eeprom.start);
+
+  v1=read_valve(VALVE1_STATE);
+  v2=read_valve(VALVE2_STATE);
+
+  switch (valve) {
+  case 0:
+  case 0xff:
+    /* Spring-return valve on VALVE1, nothing on VALVE2 */
+    if (v0_state) {
+      if (v1) return VALVE_OPEN;
+      else return VALVE_OPENING;
+    } else {
+      if (v1) return VALVE_CLOSING;
+      else return VALVE_CLOSED;
+    }
+    break;
+  case 1: /* Ball valve with no limit sensors */
+    if (v0_state) return VALVE_OPEN;
+    else return VALVE_CLOSED;
+    break;
+  case 2: /* Ball valve with open limit sensor on VALVE1 and closed limit
+	     sensor on VALVE2 */
+    if (v0_state) {
+      if (v1 && !v2) return VALVE_OPEN;
+      if (v1 && v2) return VALVE_ERROR;
+      return VALVE_OPENING;
+    } else {
+      if (v2 && !v1) return VALVE_CLOSED;
+      if (v1 && v2) return VALVE_ERROR;
+      return VALVE_CLOSING;
+    }
+    break;
   }
+  return VALVE_ERROR;
 }
