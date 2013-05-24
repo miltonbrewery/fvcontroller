@@ -130,9 +130,14 @@ int main(void)
     }
     if (get_buttons()) {
       if (get_buttons()==(K_UP|K_DOWN)) {
+	struct storage s;
 	/* We leave this main loop when entering setup mode because it
-	   requires dedicated access to the 1-wire bus */
-	sensor_setup();
+	   requires dedicated access to the 1-wire bus.  This setup mode
+	   can be disabled by setting the fpsetup register to zero. */
+	s=reg_storage(&fpsetup);
+	if (eeprom_read_byte((void *)s.loc.eeprom.start)) {
+	  sensor_setup();
+	}
       } else if (get_buttons()==(K_DOWN)) {
 	choose_mode();
       }

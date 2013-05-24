@@ -236,6 +236,15 @@ const struct reg ident={
   .writestr=eeprom_string_write,
 };
 
+const struct reg fpsetup={
+  .name="fpsetup",
+  .description="Setup enable",
+  .storage.loc.eeprom={0x3f0,0x01},
+  .storage.slen=4,
+  .readstr=eeprom_uint8_read,
+  .writestr=eeprom_uint8_write,
+};
+
 const struct reg vtype={
   .name="vtype",
   .description="Valve type",
@@ -396,7 +405,7 @@ static const struct reg err_pwr={
 };
 
 static const PROGMEM struct reg *const all_registers[]={
-  &ident, &flashcount, &version, &bl,
+  &ident, &flashcount, &version, &bl, &fpsetup,
   &t0,&t0_id,&t0_c0,&t0_c0r,
   &t1,&t1_id,&t1_c0,&t1_c0r,
   &t2,&t2_id,&t2_c0,&t2_c0r,
