@@ -136,6 +136,7 @@ class Register(models.Model):
     # again from the hardware rather than the database
     max_interval=models.IntegerField() # In seconds
     config=models.BooleanField() # Is this a configuration register?
+    frontpage=models.BooleanField() # Display on the front page?
     def __unicode__(self):
         return "%s %s"%(self.controller,self.name)
     def value(self,force_check=False):

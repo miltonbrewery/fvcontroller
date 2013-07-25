@@ -1,18 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
+<h1>Data log</h1>
+{% if controllers %}
 <table>
 <tr><th>Vessel</th><th>Temperature</th><th>Mode</th><th>Low</th><th>High</th><th>Valve</th><th></th></tr>
 {% for c in controllers %}
 <tr>
 <td><a href="{{c.get_absolute_url}}">{{c.ident}}</a></td>
-<td>{{c.regs.t0.value}}</td>
+<td>{{c.regs.t0.value}}{{c.regs.t0.unit}}</td>
 <td>{{c.regs.mode.value}}</td>
-<td>{{c.regs.setlo.value}}</td>
-<td>{{c.regs.sethi.value}}</td>
+<td>{{c.regs.setlo.value}}{{c.regs.setlo.unit}}</td>
+<td>{{c.regs.sethi.value}}{{c.regs.sethi.unit}}</td>
 <td>{{c.regs.v0.value}}</td>
 <td><a href="{% url datalog-csvfile c.ident "t0" %}">Download CSV</a></td>
 </tr>
 {% endfor %}
 </table>
+{% endif %}
+
+{% if registers %}
+<br />
+<table>
+{% for r in registers %}
+<tr>
+<td>{{r.description}}</td>
+<td>{{r.value}}{{r.unit}}</td>
+<td><a href="{% url datalog-graph %}?series={{r.controller.ident}}:{{r.name}}:black&amp;start=7&amp;leftmargin=0&amp;bottommargin=0">Graph</a></td>
+</tr>
+{% endfor %}
+</table>
+{% endif %}
 
 {% endblock %}

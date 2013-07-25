@@ -10,8 +10,10 @@ import xml.etree.ElementTree as ET
 
 def summary(request):
     controllers=Controller.objects.all()
+    registers=Register.objects.filter(frontpage=True).order_by("description").all()
     return render_to_response('datalog/summary.html',
-                              {'controllers':controllers,},
+                              {'controllers':controllers,
+                               'registers':registers},
                               context_instance=RequestContext(request))
 
 def detail(request,name,config=False):
