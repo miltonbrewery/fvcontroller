@@ -59,7 +59,7 @@ if __name__=="__main__":
 
     server=SocketServer.TCPServer((HOST,PORT),ConnectionHandler)
 
-    s=serial.Serial("/dev/ttyUSB0",timeout=0.5)
+    s=serial.Serial("/dev/fvcontrollers",timeout=0.5)
     full_reset(s)
 
     server.serve_forever()
