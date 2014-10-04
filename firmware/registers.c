@@ -365,6 +365,22 @@ const struct reg mode={
   .readstr=eeprom_string_read,
   .writestr=eeprom_string_write,
 };
+const struct reg alarm_hi={
+  .name="alarm/hi",
+  .description="High temp alarm",
+  .storage.loc.eeprom={0x3d0,0x04},
+  .storage.slen=12,
+  .readstr=eeprom_temperature_string_read,
+  .writestr=eeprom_temperature_string_write,
+};
+const struct reg alarm_lo={
+  .name="alarm/lo",
+  .description="Low temp alarm",
+  .storage.loc.eeprom={0x3d4,0x04},
+  .storage.slen=12,
+  .readstr=eeprom_temperature_string_read,
+  .writestr=eeprom_temperature_string_write,
+};
 
 #define moderegs(mode,addr)	 \
   static const struct reg mode##_name={		\
@@ -436,7 +452,7 @@ static const PROGMEM struct reg *const all_registers[]={
   &t2,&t2_id,&t2_c0,&t2_c0r,
   &t3,&t3_id,&t3_c0,&t3_c0r,
   &v0,&vtype,
-  &set_hi,&set_lo,&mode,
+  &set_hi,&set_lo,&mode,&alarm_hi,&alarm_lo,
   &m0_name,&m0_lo,&m0_hi,
   &m1_name,&m1_lo,&m1_hi,
   &m2_name,&m2_lo,&m2_hi,

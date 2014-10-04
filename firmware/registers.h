@@ -42,6 +42,7 @@ extern uint8_t reg_write_string(const struct reg *reg, const char *buf);
 extern void record_error(uint8_t *err);
 
 /* Registers accessed by name in the code */
-extern const struct reg ident,bl,blalarm,set_hi,set_lo,mode,vtype,fpsetup;
+extern const struct reg ident,bl,blalarm,set_hi,set_lo,mode,alarm_hi,alarm_lo,
+  vtype,fpsetup;
 
 #endif /* _registers_h */

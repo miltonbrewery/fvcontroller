@@ -5,6 +5,7 @@
 #include "hardware.h"
 #include "registers.h"
 #include "owb.h"
+#include "alarm.h"
 
 /* The hardware reads out temperatures in multiples of 1/16 degree
    (0.0625).  We then take that and apply calibration data,
@@ -40,6 +41,7 @@ void read_probes(void)
 {
   struct storage s;
   int32_t s_hi,s_lo;
+  int32_t a_hi,a_lo;
   uint8_t valve;
 
   t0_temp=read_probe(PSTR("t0"));
@@ -48,17 +50,35 @@ void read_probes(void)
   t3_temp=read_probe(PSTR("t3"));
 
   /* Don't be a thermostat if we don't have a reading */
-  if (t0_temp==BAD_TEMP) return;
+  if (t0_temp==BAD_TEMP) {
+    SET_ALARM(ALARM_NO_TEMPERATURE);
+    return;
+  }
+  UNSET_ALARM(ALARM_NO_TEMPERATURE);
 
-  /* Read s_hi and s_lo from eeprom */
+  /* Read necessary registers from eeprom */
   s=reg_storage(&set_hi);
   eeprom_read_block(&s_hi,(void *)s.loc.eeprom.start,4);
   s=reg_storage(&set_lo);
   eeprom_read_block(&s_lo,(void *)s.loc.eeprom.start,4);
-
-  /* Read valve mode from eeprom */
+  s=reg_storage(&alarm_hi);
+  eeprom_read_block(&a_hi,(void *)s.loc.eeprom.start,4);
+  s=reg_storage(&alarm_lo);
+  eeprom_read_block(&a_lo,(void *)s.loc.eeprom.start,4);
   s=reg_storage(&vtype);
   valve=eeprom_read_byte((void *)s.loc.eeprom.start);
+
+  /* Check alarm temperatures */
+  if (t0_temp>a_hi) {
+    SET_ALARM(ALARM_TEMPERATURE_HIGH);
+  } else {
+    UNSET_ALARM(ALARM_TEMPERATURE_HIGH);
+  }
+  if (t0_temp<a_lo) {
+    SET_ALARM(ALARM_TEMPERATURE_LOW);
+  } else {
+    UNSET_ALARM(ALARM_TEMPERATURE_LOW);
+  }
   
   /* Be a thermostat, with valve opened to provide chilling */
   if (t0_temp>s_hi) {

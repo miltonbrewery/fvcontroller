@@ -13,4 +13,7 @@ extern uint8_t alarm;
 
 extern const char *alarm_to_string_P();
 
+#define SET_ALARM(x) do { alarm|=(x); } while(0)
+#define UNSET_ALARM(x) do {alarm&=~(x); } while(0)
+
 #endif /* _alarm_h */
