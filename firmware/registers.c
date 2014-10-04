@@ -483,6 +483,8 @@ moderegs(m0,0x060,0x160);
 moderegs(m1,0x070,0x170);
 moderegs(m2,0x080,0x180);
 moderegs(m3,0x090,0x190);
+moderegs(m4,0x0a0,0x1a0);
+moderegs(m5,0x0b0,0x1b0);
 
 static const struct reg err_miss={
   .name="err/miss",
@@ -530,6 +532,8 @@ static const PROGMEM struct reg *const all_registers[]={
   moderegrefs(m1),
   moderegrefs(m2),
   moderegrefs(m3),
+  moderegrefs(m4),
+  moderegrefs(m5),
   &err_miss,&err_shrt,&err_crc,&err_pwr,
 };
 
