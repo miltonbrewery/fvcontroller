@@ -43,6 +43,6 @@ extern void record_error(uint8_t *err);
 
 /* Registers accessed by name in the code */
 extern const struct reg ident,bl,blalarm,set_hi,set_lo,mode,alarm_hi,alarm_lo,
-  vtype,fpsetup;
+  jog_hi,jog_lo,vtype,fpsetup,jog_flip,jog_wait;
 
 #endif /* _registers_h */

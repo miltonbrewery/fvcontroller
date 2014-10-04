@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <avr/eeprom.h>
+#include <avr/interrupt.h>
 #include "temp.h"
 #include "hardware.h"
 #include "registers.h"
 #include "owb.h"
 #include "alarm.h"
+#include "timer.h"
 
 /* The hardware reads out temperatures in multiples of 1/16 degree
    (0.0625).  We then take that and apply calibration data,
@@ -17,9 +19,24 @@ int32_t t0_temp=BAD_TEMP;
 int32_t t1_temp=BAD_TEMP;
 int32_t t2_temp=BAD_TEMP;
 int32_t t3_temp=BAD_TEMP;
-uint8_t v0_state; /* Desired valve state: 0=closed, 1=open */
+/* NB v0_state and desired_v0_state are separate because we don't want
+   changes to v0_state made by the "jog" code to affect the
+   desired_v0_state hysteresis state in the event that t0 is between
+   the low and high set points. */
+uint8_t v0_state; /* How we are driving v0 at the moment */
+uint8_t desired_v0_state; /* Desired valve state: 0=closed, 1=open */
 uint8_t v1_output_on;
 uint8_t v2_output_on;
+static uint8_t jiggling; /* Are we jiggling the valve to unstick it? */
+
+static void trigger_jog_timer(const struct reg *reg)
+{
+  struct storage s;
+  s=reg_storage(reg);
+  cli();
+  jog_timer=eeprom_read_word((void *)s.loc.eeprom.start);
+  sei();
+}
 
 /* NB expects name to be a pointer to a string in progmem */
 static int32_t read_probe(const char *name)
@@ -42,6 +59,7 @@ void read_probes(void)
   struct storage s;
   int32_t s_hi,s_lo;
   int32_t a_hi,a_lo;
+  int32_t j_hi,j_lo;
   uint8_t valve;
 
   t0_temp=read_probe(PSTR("t0"));
@@ -65,6 +83,10 @@ void read_probes(void)
   eeprom_read_block(&a_hi,(void *)s.loc.eeprom.start,4);
   s=reg_storage(&alarm_lo);
   eeprom_read_block(&a_lo,(void *)s.loc.eeprom.start,4);
+  s=reg_storage(&jog_hi);
+  eeprom_read_block(&j_hi,(void *)s.loc.eeprom.start,4);
+  s=reg_storage(&jog_lo);
+  eeprom_read_block(&j_lo,(void *)s.loc.eeprom.start,4);
   s=reg_storage(&vtype);
   valve=eeprom_read_byte((void *)s.loc.eeprom.start);
 
@@ -82,10 +104,39 @@ void read_probes(void)
   
   /* Be a thermostat, with valve opened to provide chilling */
   if (t0_temp>s_hi) {
-    v0_state=1;
+    desired_v0_state=1;
   }
   if (t0_temp<s_lo) {
-    v0_state=0;
+    desired_v0_state=0;
+  }
+
+  v0_state=desired_v0_state;
+
+  /* Check "jog" temperatures.  If temperature is out of bounds, we
+     assume that our valve may be stuck and jiggle it to try to free
+     it.  We invert v0_state for jog/flip and then wait jog/wait
+     before trying again.  We have one timer for this, jog_timer,
+     which counts down to zero and then stays there until we reset it.
+  */
+  if (t0_temp<j_lo || t0_temp>j_hi) {
+    SET_ALARM(ALARM_VALVE_STUCK);
+    if (jog_timer==0) {
+      jiggling=!jiggling;
+      if (jiggling) {
+	trigger_jog_timer(&jog_flip);
+      } else {
+	trigger_jog_timer(&jog_wait);
+      }
+    }
+    if (jiggling) v0_state=!v0_state;
+  } else {
+    /* Temperature is within bounds.  If the flip timer expires, start the
+       wait timer. */
+    UNSET_ALARM(ALARM_VALVE_STUCK);
+    if (jiggling && jog_timer==0) {
+      jiggling=0;
+      trigger_jog_timer(&jog_wait);
+    }
   }
 
   switch (valve) {

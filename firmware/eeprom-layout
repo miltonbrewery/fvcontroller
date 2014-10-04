@@ -20,8 +20,13 @@ Addr  Len  Use
 
 0x3d0  4   alarm/hi - alarm if temperature is above this
 0x3d4  4   alarm/lo - alarm if temperature is below this
+0x3d8  4   jog/hi - assume valve stuck closed if temperature is above this
+0x3dc  4   jog/lo - assume valve stuck open if temperature is below this
 
 0x3e0  1   bl/alarm - alarm flash timeout in tenths of a second
+
+0x3e2  2   jog/flip - time to invert valve state while trying to unstick, in cs
+0x3e4  2   jog/wait - time between valve state inversions while trying to unstick
 
 0x3f0  1   fpsetup - front panel setup mode enable (0=no, anything else=yes)
 0x3f1  1   vtype - valve type

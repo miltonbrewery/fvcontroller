@@ -280,6 +280,24 @@ const struct reg blalarm={
   .writestr=eeprom_uint8_write,
 };
 
+const struct reg jog_flip={
+  .name="jog/flip",
+  .description="Valve jog time",
+  .storage.loc.eeprom={0x3e2,0x02},
+  .storage.slen=6,
+  .readstr=eeprom_uint16_read,
+  .writestr=eeprom_uint16_write,
+};
+
+const struct reg jog_wait={
+  .name="jog/wait",
+  .description="Jog try interval",
+  .storage.loc.eeprom={0x3e4,0x02},
+  .storage.slen=6,
+  .readstr=eeprom_uint16_read,
+  .writestr=eeprom_uint16_write,
+};
+
 static const struct reg version={
   .name="ver",
   .description="Firmware version",
@@ -381,6 +399,22 @@ const struct reg alarm_lo={
   .readstr=eeprom_temperature_string_read,
   .writestr=eeprom_temperature_string_write,
 };
+const struct reg jog_hi={
+  .name="jog/hi",
+  .description="Valve stuck off",
+  .storage.loc.eeprom={0x3d8,0x04},
+  .storage.slen=12,
+  .readstr=eeprom_temperature_string_read,
+  .writestr=eeprom_temperature_string_write,
+};
+const struct reg jog_lo={
+  .name="jog/lo",
+  .description="Valve stuck on",
+  .storage.loc.eeprom={0x3dc,0x04},
+  .storage.slen=12,
+  .readstr=eeprom_temperature_string_read,
+  .writestr=eeprom_temperature_string_write,
+};
 
 #define moderegs(mode,addr)	 \
   static const struct reg mode##_name={		\
@@ -447,12 +481,13 @@ static const struct reg err_pwr={
 
 static const PROGMEM struct reg *const all_registers[]={
   &ident, &flashcount, &version, &bl, &blalarm, &alarmreg, &fpsetup,
+  &jog_flip, &jog_wait,
   &t0,&t0_id,&t0_c0,&t0_c0r,
   &t1,&t1_id,&t1_c0,&t1_c0r,
   &t2,&t2_id,&t2_c0,&t2_c0r,
   &t3,&t3_id,&t3_c0,&t3_c0r,
   &v0,&vtype,
-  &set_hi,&set_lo,&mode,&alarm_hi,&alarm_lo,
+  &set_hi,&set_lo,&mode,&alarm_hi,&alarm_lo,&jog_hi,&jog_lo,
   &m0_name,&m0_lo,&m0_hi,
   &m1_name,&m1_lo,&m1_hi,
   &m2_name,&m2_lo,&m2_hi,

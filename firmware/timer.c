@@ -27,6 +27,7 @@ void timer_init(void)
 uint8_t tprobe_timer;
 uint8_t alarm_timer;
 uint16_t backlight_timer;
+uint16_t jog_timer;
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -34,4 +35,5 @@ ISR(TIMER1_COMPA_vect)
   if (tprobe_timer>0) tprobe_timer--;
   if (alarm_timer>0) alarm_timer--;
   if (backlight_timer!=0xffff && backlight_timer>0) backlight_timer--;
+  if (jog_timer>0) jog_timer--;
 }
