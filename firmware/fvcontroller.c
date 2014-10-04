@@ -17,6 +17,20 @@
 #include "command.h"
 #include "alarm.h"
 
+static void mode_reg_copy(const char *template, int m, const char *dest)
+{
+  const struct reg *mr;
+  char mn[8];
+  char buf[5];
+  sprintf_P(mn,template,m);
+  mr=reg_by_name(mn);
+  if (!mr) return;
+  reg_read_string(mr,buf,5);
+  mr=reg_by_name_P(dest);
+  if (!mr) return;
+  reg_write_string(mr,buf);
+}
+
 static void choose_mode(void)
 {
   const struct reg *mr;
@@ -40,6 +54,10 @@ static void choose_mode(void)
 	break;
       }
       reg_read_string(mr,name,9);
+      if (name[0]==0) {
+	m=0;
+	break;
+      }
       sprintf_P(mn,PSTR("m%d/lo"),m);
       mr=reg_by_name(mn);
       reg_read_string(mr,lo,5);
@@ -61,6 +79,10 @@ static void choose_mode(void)
 	  reg_write_string(&set_lo,lo);
 	  reg_write_string(&set_hi,hi);
 	  reg_write_string(&mode,name);
+	  mode_reg_copy(PSTR("m%d/a/lo"),m,PSTR("alarm/lo"));
+	  mode_reg_copy(PSTR("m%d/a/hi"),m,PSTR("alarm/hi"));
+	  mode_reg_copy(PSTR("m%d/j/lo"),m,PSTR("jog/lo"));
+	  mode_reg_copy(PSTR("m%d/j/hi"),m,PSTR("jog/hi"));
 	  BACKLIGHT_OFF();
 	  return;
 	}

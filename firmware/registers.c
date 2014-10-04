@@ -20,6 +20,7 @@ static void eeprom_string_read(const struct reg *reg, char *buf, size_t len)
   tbuf=alloca(s.slen);
   eeprom_read_block(tbuf,(void *)s.loc.eeprom.start,s.loc.eeprom.length);
   tbuf[s.slen-1]=0;
+  if (tbuf[0]==-1) tbuf[0]=0; /* Uninitialised eeprom - return empty string */
   strncpy(buf,tbuf,len);
   buf[len-1]=0;
 }
@@ -416,11 +417,11 @@ const struct reg jog_lo={
   .writestr=eeprom_temperature_string_write,
 };
 
-#define moderegs(mode,addr)	 \
+#define moderegs(mode,addr1,addr2)			\
   static const struct reg mode##_name={		\
     .name=#mode "/name",			\
     .description="Mode " #mode " name",		\
-    .storage.loc.eeprom={addr,0x08},		\
+    .storage.loc.eeprom={addr1,0x08},		\
     .storage.slen=9,				\
     .readstr=eeprom_string_read,		\
     .writestr=eeprom_string_write,		\
@@ -428,7 +429,7 @@ const struct reg jog_lo={
   static const struct reg mode##_lo={		\
     .name=#mode "/lo",				\
     .description="Mode " #mode " low set",	\
-    .storage.loc.eeprom={addr+8,0x04},		\
+    .storage.loc.eeprom={addr1+8,0x04},		\
     .storage.slen=5,				\
     .readstr=eeprom_string_read,		\
     .writestr=eeprom_string_write,		\
@@ -436,15 +437,52 @@ const struct reg jog_lo={
   static const struct reg mode##_hi={		\
     .name=#mode "/hi",				\
     .description="Mode " #mode " hi set",	\
-    .storage.loc.eeprom={addr+12,0x04},		\
+    .storage.loc.eeprom={addr1+12,0x04},	\
+    .storage.slen=5,				\
+    .readstr=eeprom_string_read,		\
+    .writestr=eeprom_string_write,		\
+  };						\
+  static const struct reg mode##_alarm_lo={	\
+    .name=#mode "/a/lo",			\
+    .description="Mode " #mode "alarm lo",	\
+    .storage.loc.eeprom={addr2+0,0x04},		\
+    .storage.slen=5,				\
+    .readstr=eeprom_string_read,		\
+    .writestr=eeprom_string_write,		\
+  };						\
+  static const struct reg mode##_alarm_hi={	\
+    .name=#mode "/a/hi",			\
+    .description="Mode " #mode "alarm hi",	\
+    .storage.loc.eeprom={addr2+4,0x04},		\
+    .storage.slen=5,				\
+    .readstr=eeprom_string_read,		\
+    .writestr=eeprom_string_write,		\
+  };						\
+  static const struct reg mode##_jog_lo={	\
+    .name=#mode "/j/lo",			\
+    .description="Mode " #mode "jog lo",	\
+    .storage.loc.eeprom={addr2+8,0x04},		\
+    .storage.slen=5,				\
+    .readstr=eeprom_string_read,		\
+    .writestr=eeprom_string_write,		\
+  };						\
+  static const struct reg mode##_jog_hi={	\
+    .name=#mode "/j/hi",			\
+    .description="Mode " #mode " jog hi",	\
+    .storage.loc.eeprom={addr2+12,0x04},	\
     .storage.slen=5,				\
     .readstr=eeprom_string_read,		\
     .writestr=eeprom_string_write,		\
   };
-moderegs(m0,0x060);
-moderegs(m1,0x070);
-moderegs(m2,0x080);
-moderegs(m3,0x090);
+
+#define moderegrefs(mode)						\
+  &mode##_name,&mode##_lo,&mode##_hi,&mode##_alarm_lo,&mode##_alarm_hi, \
+    &mode##_jog_lo,&mode##_jog_hi
+
+moderegs(m0,0x060,0x160);
+moderegs(m1,0x070,0x170);
+moderegs(m2,0x080,0x180);
+moderegs(m3,0x090,0x190);
 
 static const struct reg err_miss={
   .name="err/miss",
@@ -488,10 +526,10 @@ static const PROGMEM struct reg *const all_registers[]={
   &t3,&t3_id,&t3_c0,&t3_c0r,
   &v0,&vtype,
   &set_hi,&set_lo,&mode,&alarm_hi,&alarm_lo,&jog_hi,&jog_lo,
-  &m0_name,&m0_lo,&m0_hi,
-  &m1_name,&m1_lo,&m1_hi,
-  &m2_name,&m2_lo,&m2_hi,
-  &m3_name,&m3_lo,&m3_hi,
+  moderegrefs(m0),
+  moderegrefs(m1),
+  moderegrefs(m2),
+  moderegrefs(m3),
   &err_miss,&err_shrt,&err_crc,&err_pwr,
 };
 
