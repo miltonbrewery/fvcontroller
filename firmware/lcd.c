@@ -29,7 +29,7 @@ static void var_str(const char *str)
 }
 
 /* Draw the "idle" display */
-void lcd_home_screen(void)
+void lcd_home_screen(const char *status)
 {
   char buf[16];
   struct storage s;
@@ -52,44 +52,52 @@ void lcd_home_screen(void)
   var_str(buf);
   lcd_data(' ');
   lcd_data(' ');
+  lcd_data(' ');
+  lcd_data(' ');
+  lcd_data(' ');
   /* Next line */
   lcd_cmd(LCD_DDADDR(ROW2));
-  /* Bottom left is current temp, up to 5 characters */
-  if (t0_temp==BAD_TEMP) {
-    sprintf_P(buf,PSTR("XXXXX"));
+  if (status) {
+    strncpy_P(buf,status,16);
+    fixed_str(buf,16);
   } else {
-    tf=t0_temp/10000.0;
-    snprintf_P(buf,9,PSTR("%0.1f"),(double)tf);
+    /* Bottom left is current temp, up to 5 characters */
+    if (t0_temp==BAD_TEMP) {
+      sprintf_P(buf,PSTR("XXXXX"));
+    } else {
+      tf=t0_temp/10000.0;
+      snprintf_P(buf,9,PSTR("%0.1f"),(double)tf);
+    }
+    fixed_str(buf,5);
+    lcd_data(' ');
+    
+    /* Current mode */
+    reg_read_string(&mode,buf,9);
+    fixed_str(buf,8);
+    lcd_data(' ');
+    /* Bottom right is valve state as 1 character */
+    switch (get_valve_state()) {
+    case VALVE_CLOSED:
+      buf[0]='-';
+      break;
+    case VALVE_OPENING:
+      buf[0]='O';
+      break;
+    case VALVE_OPEN:
+      buf[0]='|';
+      break;
+    case VALVE_CLOSING:
+      buf[0]='C';
+      break;
+    case VALVE_ERROR:
+      buf[0]='E';
+      break;
+    default:
+      buf[0]='?';
+      break;
+    }
+    fixed_str(buf,1);
   }
-  fixed_str(buf,5);
-  lcd_data(' ');
-
-  /* Current mode */
-  reg_read_string(&mode,buf,9);
-  fixed_str(buf,8);
-  lcd_data(' ');
-  /* Bottom right is valve state as 1 character */
-  switch (get_valve_state()) {
-  case VALVE_CLOSED:
-    buf[0]='-';
-    break;
-  case VALVE_OPENING:
-    buf[0]='O';
-    break;
-  case VALVE_OPEN:
-    buf[0]='|';
-    break;
-  case VALVE_CLOSING:
-    buf[0]='C';
-    break;
-  case VALVE_ERROR:
-    buf[0]='E';
-    break;
-  default:
-    buf[0]='?';
-    break;
-  }
-  fixed_str(buf,1);
 }
 
 void lcd_message(const char *message)

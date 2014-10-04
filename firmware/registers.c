@@ -10,6 +10,7 @@
 #include "owb.h"
 #include "temp.h"
 #include "hardware.h"
+#include "alarm.h"
 
 static void eeprom_string_read(const struct reg *reg, char *buf, size_t len)
 {
@@ -86,6 +87,13 @@ static void version_string_read(const struct reg *reg, char *buf, size_t len)
 {
   (void)reg;
   strncpy_P(buf,version_string,len);
+  buf[len-1]=0;
+}
+
+static void alarm_string_read(const struct reg *reg, char *buf, size_t len)
+{
+  (void)reg;
+  strncpy_P(buf,alarm_to_string_P(),len);
   buf[len-1]=0;
 }
 
@@ -263,12 +271,29 @@ const struct reg bl={
   .writestr=eeprom_uint16_write,
 };
 
+const struct reg blalarm={
+  .name="bl/alarm",
+  .description="Alarm flash time",
+  .storage.loc.eeprom={0x3e0,0x01},
+  .storage.slen=4,
+  .readstr=eeprom_uint8_read,
+  .writestr=eeprom_uint8_write,
+};
+
 static const struct reg version={
   .name="ver",
   .description="Firmware version",
   .storage.loc.progmem=version_string,
   .storage.slen=sizeof(version_string)+1,
   .readstr=version_string_read,
+};
+
+static const struct reg alarmreg={
+  .name="alarm",
+  .description="Current alarm",
+  .storage.loc.ram=&alarm,
+  .storage.slen=17,
+  .readstr=alarm_string_read,
 };
 
 #define proberegs(probe,addr)			\
@@ -405,7 +430,7 @@ static const struct reg err_pwr={
 };
 
 static const PROGMEM struct reg *const all_registers[]={
-  &ident, &flashcount, &version, &bl, &fpsetup,
+  &ident, &flashcount, &version, &bl, &blalarm, &alarmreg, &fpsetup,
   &t0,&t0_id,&t0_c0,&t0_c0r,
   &t1,&t1_id,&t1_c0,&t1_c0r,
   &t2,&t2_id,&t2_c0,&t2_c0r,

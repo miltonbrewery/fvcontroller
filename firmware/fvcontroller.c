@@ -15,6 +15,7 @@
 #include "setup.h"
 #include "temp.h"
 #include "command.h"
+#include "alarm.h"
 
 static void choose_mode(void)
 {
@@ -80,8 +81,19 @@ static void trigger_backlight(void)
   sei();
 }
 
+static void trigger_alarm(void)
+{
+  struct storage s;
+  s=reg_storage(&blalarm);
+  cli();
+  alarm_timer=eeprom_read_byte((void *)s.loc.eeprom.start);
+  sei();
+}
+
 int main(void)
 {
+  uint8_t display_cycle=0;
+
   /* Hardware initialisation: our pins are single-direction apart from
      the pin used for one-wire bus.  Initialise the pin direction
      registers here. */
@@ -122,11 +134,27 @@ int main(void)
   tprobe_timer=TEMPERATURE_PROBE_PERIOD;
   trigger_backlight();
   for (;;) {
-    lcd_home_screen();
-    if (backlight_timer!=0) {
-      BACKLIGHT_ON();
+    /* Update display and backlight.  If there is an alarm, then we
+       alternate between regular backlight and lcd_home_screen(), and
+       inverted backlight and alarm message. */
+    if (display_cycle && alarm) {
+      lcd_home_screen(alarm_to_string_P());
+      if (backlight_timer!=0) {
+	BACKLIGHT_OFF();
+      } else {
+	BACKLIGHT_ON();
+      }
     } else {
-      BACKLIGHT_OFF();
+      lcd_home_screen(NULL);
+      if (backlight_timer!=0) {
+	BACKLIGHT_ON();
+      } else {
+	BACKLIGHT_OFF();
+      }
+    }
+    if (alarm_timer==0) {
+      display_cycle=!display_cycle;
+      trigger_alarm();
     }
     if (get_buttons()) {
       if (get_buttons()==(K_UP|K_DOWN)) {

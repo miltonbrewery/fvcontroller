@@ -14,7 +14,7 @@ LDFLAGS  := -mmcu=$(AVR_MCU) -Wl,-u,vfprintf,-u,vfscanf -lscanf_flt -lprintf_flt
 all: fvcontroller.hex
 
 fvcontroller.elf: fvcontroller.o serial.o hardware.o lcd.o registers.o owb.o \
-	temp.o buttons.o timer.o setup.o command.o
+	temp.o buttons.o timer.o setup.o command.o alarm.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 flash: fvcontroller.hex

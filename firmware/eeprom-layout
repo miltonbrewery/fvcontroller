@@ -18,6 +18,8 @@ Addr  Len  Use
 0x080 16   m2/*  - as m0
 0x090 16   m3/*  - as m0
 
+0x3e0  1   bl/alarm - alarm flash timeout in tenths of a second
+
 0x3f0  1   fpsetup - front panel setup mode enable (0=no, anything else=yes)
 0x3f1  1   vtype - valve type
 0x3f2  2   bl - backlight timeout in tenths of a second
