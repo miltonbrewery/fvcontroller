@@ -126,13 +126,20 @@ def graph(request):
     graphwidth=width-leftmargin
     graphheight=height-bottommargin
 
-    # Draw horizontal scale lines for temperature every 10 degrees, starting at 0
+    # Draw horizontal scale lines for temperature
     y=0.0
     while y<floatmax:
         scaley=(y-floatmin)*graphheight/floatmax
         ET.SubElement(g,"line",x1="0",x2=str(width),
                       y1=str(scaley),y2=str(scaley),
                       stroke="lightgrey")
+        y=y+1.0
+    y=0.0
+    while y<floatmax:
+        scaley=(y-floatmin)*graphheight/floatmax
+        ET.SubElement(g,"line",x1="0",x2=str(width),
+                      y1=str(scaley),y2=str(scaley),
+                      stroke="darkgrey")
         y=y+5.0
 
     for s in series:
