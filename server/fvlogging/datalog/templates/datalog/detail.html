@@ -19,7 +19,7 @@
 
 {% if not config %}
 <p>Last 7 days:</p>
-<img src="{% url datalog-graph %}?series=FV1:t1:brown&series={{controller}}:t0:black&series={{controller}}:set/lo:blue&series={{controller}}:set/hi:red&series=FV4:t1:green&start=7&leftmargin=0&bottommargin=0" />
+<img src="{% url "datalog-graph" %}?series=FV1:t1:brown&series={{controller}}:t0:black&series={{controller}}:set/lo:blue&series={{controller}}:set/hi:red&series=FV4:t1:green&start=7&leftmargin=0&bottommargin=0" />
 {% endif %}
 
 {% endblock %}
