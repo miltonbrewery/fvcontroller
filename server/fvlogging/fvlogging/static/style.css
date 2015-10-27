@@ -1,0 +1,59 @@
+/* Style for fvlogging */
+
+body {
+    font-family: sans-serif;
+}
+
+header {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 10px;
+}
+
+form.graphperiodform ul {
+    display: inline;
+}
+
+form.graphperiodform ul li {
+    display: inline;
+}
+
+form.graphperiodform ul li ul.errorlist {
+    display: list-item;
+    color: red;
+}
+
+.RegisterTable {
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.RegisterTable th {
+    padding: 10px;
+}
+
+.RegisterTable tr:hover td {
+    background-color: #ffffff;
+}
+
+.RegisterTable td {
+    vertical-align: middle;
+    background-color: #e5e5e5;
+    border: 1px solid black;
+    border-width: 1px;
+    text-align: left;
+    padding: 7px;
+    font-size: 12px;
+    font-weight: normal;
+    color: black;
+}
+.RegisterTable th {
+    background-color: #cccccc;
+    border: none;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: black;
+}

@@ -1,8 +1,8 @@
-# Create your views here.
-
 from django.http import HttpResponse,HttpResponseRedirect,Http404
 from django.template import RequestContext
 from django.shortcuts import render_to_response
+from django import forms
+from django.core.urlresolvers import reverse
 from datalog.models import *
 import datetime
 import csv
@@ -35,6 +35,59 @@ def detail(request,name,config=False):
                                'config':config,},
                               context_instance=RequestContext(request))
 
+class GraphPeriodForm(forms.Form):
+    start=forms.DateTimeField()
+    end=forms.DateTimeField()
+    def clean(self):
+        s=None
+        e=None
+        try:
+            s=self.cleaned_data['start']
+            e=self.cleaned_data['end']
+        except:
+            pass
+        if s and e and e<=s:
+            raise forms.ValidationError("Start must be before end")
+        return self.cleaned_data
+
+def detailgraph(request,name,start=None,end=None):
+    try:
+        controller=Controller.objects.get(ident=name)
+    except:
+        raise Http404
+    if start==None or end==None:
+        end=datetime.datetime.now().replace(microsecond=0)
+        start=end-datetime.timedelta(days=7)
+    else:
+        start=parsedatetime(start)
+        end=parsedatetime(end)
+    if request.method=='POST':
+        form=GraphPeriodForm(request.POST)
+        if form.is_valid():
+            cd=form.cleaned_data
+            start=cd['start']
+            end=cd['end']
+            return HttpResponseRedirect(
+                reverse('datalog.views.detailgraph',
+                        args=(name,unicode(start),unicode(end))))
+    else:
+        form=GraphPeriodForm(initial={
+            'start':start,
+            'end':end})
+
+    period=end-start
+
+    return render_to_response('datalog/detailgraph.html',
+                              {'controller':controller,
+                               'form':form,
+                               'start':unicode(start),
+                               'end':unicode(end),
+                               'period':period,
+                               'back':unicode(start-period),
+                               'forward':unicode(end+period),
+                               },
+                              context_instance=RequestContext(request))
+
 def series_csv(request,name,register):
     try:
         controller=Controller.objects.get(ident=name)
@@ -46,7 +99,7 @@ def series_csv(request,name,register):
         raise Http404
     dt=DATATYPE_DICT[register.datatype]
     series=dt.objects.filter(register=register).order_by('timestamp')
-    r=HttpResponse(mimetype="text/csv")
+    r=HttpResponse(content_type="text/csv")
     r['Content-Disposition']='attachment; filename=%s-%s.csv'%(
         controller.ident,register.name.replace('/','-'))
     c=csv.writer(r)
@@ -148,8 +201,20 @@ def graph(request):
         register=Register.objects.get(controller=controller,name=register)
         # Retrieve all datapoints between start and end
         dt=DATATYPE_DICT[register.datatype]
-        datapoints=dt.objects.filter(register=register,timestamp__lte=end,
-                                     timestamp__gte=start).order_by('timestamp')
+        # We want to find the timestamps of the first datapoint before
+        # start (if there is one) and the first datapoint after end
+        # (if there is one), and adjust start and end to include
+        # these.  This will avoid the graph having blank sections at
+        # the left and right hand sides.
+        sdp=dt.objects.filter(register=register,timestamp__lt=start).\
+             order_by('-timestamp')[:1]
+        s_start=sdp[0].timestamp if len(sdp)==1 else start
+        edp=dt.objects.filter(register=register,timestamp__gt=end).\
+             order_by('timestamp')[:1]
+        s_end=edp[0].timestamp if len(edp)==1 else end
+        datapoints=dt.objects.filter(register=register,timestamp__lte=s_end,
+                                     timestamp__gte=s_start).\
+            order_by('timestamp')
         now_drawing=False
         dl=[]
         for datum in datapoints:
@@ -163,6 +228,6 @@ def graph(request):
                 now_drawing=True
         ET.SubElement(g,"path",stroke=colour,fill="none",d=" ".join(dl))
 
-    r=HttpResponse(mimetype="image/svg+xml")
+    r=HttpResponse(content_type="image/svg+xml")
     ET.ElementTree(svg).write(r,encoding="UTF-8",xml_declaration=True)
     return r

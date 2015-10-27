@@ -1,0 +1,29 @@
+{% extends "datalog/base.html" %}
+{% block content %}
+<header>{{controller.description}}</header>
+
+<img src="{% url "datalog-graph" %}?series=FV1:t1:brown&amp;series={{controller}}:t0:black&amp;series={{controller}}:set/lo:blue&amp;series={{controller}}:set/hi:red&amp;series=FV4:t1:green&amp;start={{start}}&amp;end={{end}}&amp;leftmargin=0&amp;bottommargin=0">
+
+<form action="" method="post" class="graphperiodform">
+{% csrf_token %}
+<ul>{{form.as_ul}}</ul>
+<input type="submit" value="Go">
+</form>
+
+<ul>
+<li><a href="{% url "datalog.views.detailgraph" controller.ident back start %}">Back {{period}}</a></li>
+<li><a href="{% url "datalog.views.detailgraph" controller.ident end forward %}">Forward {{period}}</a></li>
+<li><a href="{% url "datalog.views.detailgraph" controller.ident %}">Most recent 7 days</a></li>
+<li><a href="{% url "datalog-controller" controller.ident %}">Back to {{controller.description}} registers page</a></li>
+</ul>
+
+<script type="text/javascript">
+var dtpicker_options = {firstDay: 1,
+  dateFormat: 'yy-mm-dd', timeFormat: 'hh:mm:ss'}
+$(document).ready(function(){
+ $("#id_start").datetimepicker(dtpicker_options);
+ $("#id_end").datetimepicker(dtpicker_options);
+})
+</script>
+
+{% endblock %}

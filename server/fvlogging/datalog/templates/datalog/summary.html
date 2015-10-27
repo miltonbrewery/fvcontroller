@@ -1,8 +1,10 @@
-{% extends "base.html" %}
+{% extends "datalog/base.html" %}
+{% block jquery %}{% endblock %}
 {% block content %}
-<h1>Data log</h1>
+<header>Data log</header>
 {% if controllers %}
-<table>
+<section>
+<table class="RegisterTable">
 <tr><th>Vessel</th><th>Temperature</th><th>Mode</th><th>Low</th><th>High</th><th>Valve</th><th>Alarm</th><th></th></tr>
 {% for c in controllers %}
 <tr>
@@ -17,6 +19,7 @@
 </tr>
 {% endfor %}
 </table>
+</section>
 {% endif %}
 
 {% if registers %}

@@ -1,9 +1,11 @@
-{% extends "base.html" %}
+{% extends "datalog/base.html" %}
+{% block jquery %}{% endblock %}
 {% block content %}
-<h1>{{controller.description}}</h1>
+<header>{{controller.description}}</header>
 
+<section>
 <form action="" method="post">{% csrf_token %}
-<table>
+<table class="RegisterTable">
 <tr><th>Register</th><th>Value</th><th>New value</th></tr>
 {% for r in registers %}
 <tr><td>{{r.description}}</td><td>{{r.value}}{{r.unit}}</td>
@@ -16,10 +18,14 @@
 </form>
 
 {% if not config %}<p><a href="config/">Click here for configuration registers</a></p>{% endif %}
+</section>
 
 {% if not config %}
+<section>
+<a href="{% url "datalog.views.detailgraph" controller.ident %}">
 <p>Last 7 days:</p>
-<img src="{% url "datalog-graph" %}?series=FV1:t1:brown&series={{controller}}:t0:black&series={{controller}}:set/lo:blue&series={{controller}}:set/hi:red&series=FV4:t1:green&start=7&leftmargin=0&bottommargin=0" />
+<img src="{% url "datalog-graph" %}?series=FV1:t1:brown&amp;series={{controller}}:t0:black&amp;series={{controller}}:set/lo:blue&amp;series={{controller}}:set/hi:red&amp;series=FV4:t1:green&amp;start=7&amp;leftmargin=0&amp;bottommargin=0"></a>
+</section>
 {% endif %}
 
 {% endblock %}

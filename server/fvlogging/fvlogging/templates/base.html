@@ -1,9 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <title>{% block title %}Fermenter controller{% endblock %}</title>
 {% block style %}<link rel="STYLESHEET" type="text/css" href="{{STATIC_URL}}style.css" />{% endblock %}
+{% block jquery %}
+<link rel="STYLESHEET" type="text/css" href="{{STATIC_URL}}jquery/jquery-ui.css" />
+<script type="text/javascript" src="{{STATIC_URL}}jquery.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}jquery-ui.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}jquery-ui-timepicker-addon.js"></script>
+{% endblock %}
 </head>
 <body>
 {% if messages %}
@@ -15,11 +20,9 @@
 </ul>
 </div>
 {% endif %}
-<div id="Content">
 {% block content %}
 <p>Some content for the page.</p>
 {% endblock %}
-</div>
 
 </body>
 </html>
