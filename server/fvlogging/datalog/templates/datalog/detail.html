@@ -24,7 +24,7 @@
 <section>
 <a href="{% url "datalog.views.detailgraph" controller.ident %}">
 <p>Last 7 days:</p>
-<img src="{% url "datalog-graph" %}?series=FV1:t1:brown&amp;series={{controller}}:t0:black&amp;series={{controller}}:set/lo:blue&amp;series={{controller}}:set/hi:red&amp;series=FV4:t1:green&amp;start=7&amp;leftmargin=0&amp;bottommargin=0"></a>
+<img src="{% url "datalog-graph" %}?{% for reg in controller.register_set.all %}{% if reg.graphcolour %}series={{reg.controller.ident}}:{{reg.name}}:{{reg.graphcolour}}&amp;{% endif %}{% endfor %}{% for reg in extraseries %}series={{reg.controller.ident}}:{{reg.name}}:{{reg.graphcolour_all}}&amp;{% endfor %}start=7&amp;leftmargin=0&amp;bottommargin=0"></a>
 </section>
 {% endif %}
 

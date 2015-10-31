@@ -2,7 +2,7 @@
 {% block content %}
 <header>{{controller.description}}</header>
 
-<img src="{% url "datalog-graph" %}?series=FV1:t1:brown&amp;series={{controller}}:t0:black&amp;series={{controller}}:set/lo:blue&amp;series={{controller}}:set/hi:red&amp;series=FV4:t1:green&amp;start={{start}}&amp;end={{end}}&amp;leftmargin=0&amp;bottommargin=0">
+<img src="{% url "datalog-graph" %}?{% for reg in controller.register_set.all %}{% if reg.graphcolour %}series={{reg.controller.ident}}:{{reg.name}}:{{reg.graphcolour}}&amp;{% endif %}{% endfor %}{% for reg in extraseries %}series={{reg.controller.ident}}:{{reg.name}}:{{reg.graphcolour_all}}&amp;{% endfor %}start={{start}}&amp;end={{end}}&amp;leftmargin=0&amp;bottommargin=0">
 
 <form action="" method="post" class="graphperiodform">
 {% csrf_token %}

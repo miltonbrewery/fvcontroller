@@ -22,6 +22,7 @@ def detail(request,name,config=False):
     except:
         raise Http404
     registers=controller.register_set.filter(config=config)
+    extraseries=Register.objects.exclude(graphcolour_all="")
     if request.method=='POST':
         # Go through the registers looking for ones that have a value
         # set in the request, and update as appropriate.
@@ -32,6 +33,7 @@ def detail(request,name,config=False):
     return render_to_response('datalog/detail.html',
                               {'controller':controller,
                                'registers':registers,
+                               'extraseries':extraseries,
                                'config':config,},
                               context_instance=RequestContext(request))
 
@@ -55,6 +57,7 @@ def detailgraph(request,name,start=None,end=None):
         controller=Controller.objects.get(ident=name)
     except:
         raise Http404
+    extraseries=Register.objects.exclude(graphcolour_all="")
     if start==None or end==None:
         end=datetime.datetime.now().replace(microsecond=0)
         start=end-datetime.timedelta(days=7)
@@ -79,6 +82,7 @@ def detailgraph(request,name,start=None,end=None):
 
     return render_to_response('datalog/detailgraph.html',
                               {'controller':controller,
+                               'extraseries':extraseries,
                                'form':form,
                                'start':unicode(start),
                                'end':unicode(end),
