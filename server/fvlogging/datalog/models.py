@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.db import models
 import socket
 import time,datetime
@@ -89,13 +90,13 @@ class Datum(models.Model):
 
 class StringDatum(Datum):
     data=models.TextField(null=True)
-    def __unicode__(self): return u"%s"%self.data
+    def __unicode__(self): return self.data
 
 class FloatDatum(Datum):
     data=models.FloatField(null=True)
     def __unicode__(self):
-        if self.data: return u"%0.2f"%self.data
-        return u"None"
+        if self.data: return "%0.2f"%self.data
+        return "None"
     @staticmethod
     def cast(value):
         if value=="None": return None
@@ -104,20 +105,24 @@ class FloatDatum(Datum):
 class IntegerDatum(Datum):
     data=models.IntegerField(null=True)
     def __unicode__(self):
-        if self.data: return u"%d"%self.data
-        return u"None"
+        if self.data: return "%d"%self.data
+        return "None"
     @staticmethod
     def cast(value):
         if value=="None": return None
         return int(value)
 
 DATATYPES=(
-    ('S',StringDatum),
-    ('F',FloatDatum),
-    ('I',IntegerDatum),
+    ('S',"StringDatum"),
+    ('F',"FloatDatum"),
+    ('I',"IntegerDatum"),
 )
 
-DATATYPE_DICT=dict(DATATYPES)
+DATATYPE_DICT={
+    'S':StringDatum,
+    'F':FloatDatum,
+    'I':IntegerDatum,
+}
 
 class Register(models.Model):
     """A register found in a controller.  We log values found in these
@@ -131,12 +136,21 @@ class Register(models.Model):
     # descending from an abstract base class
     datatype=models.CharField(max_length=1,choices=DATATYPES)
     unit=models.CharField(max_length=10,null=True,blank=True)
-    readonly=models.BooleanField()
+    readonly=models.BooleanField(
+        help_text="Can value not be set on controller?")
     # If the most recent recorded value is older than this, read it
     # again from the hardware rather than the database
     max_interval=models.IntegerField() # In seconds
     config=models.BooleanField() # Is this a configuration register?
-    frontpage=models.BooleanField() # Display on the front page?
+    frontpage=models.BooleanField(
+        help_text="Show this register on the site front page?")
+    graphcolour=models.CharField(
+        max_length=20,blank=True,
+        help_text="Colour of trace on controller's default graph, or "
+        "blank to leave out")
+    graphcolour_all=models.CharField(
+        max_length=20,blank=True,
+        help_text="Colour of trace on all graphs, or blank to leave out")
     def __unicode__(self):
         return "%s %s"%(self.controller,self.name)
     def value(self,force_check=False):
