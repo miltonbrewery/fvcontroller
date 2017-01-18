@@ -6,6 +6,8 @@ homedir=os.getenv("HOME")
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+ALLOWED_HOSTS = [ '*' ]
+
 ADMINS = (
     ('Stephen Early', 'sde@individualpubs.co.uk'),
 )
