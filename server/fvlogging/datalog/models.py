@@ -189,6 +189,23 @@ class Register(models.Model):
             # the hardware yet
             dp=dpl[0]
         return dp
+    def last_change(self):
+        """When did the value last change?
+
+        Does not read from the hardware; reports state solely from the
+        database.
+        """
+        # Read most recent (up to) two datapoints.
+        dt=DATATYPE_DICT[self.datatype]
+        dpl=dt.objects.filter(register=self).order_by('-timestamp')[:2]
+        if len(dpl) == 0:
+            return
+        elif len(dpl) == 1:
+            return dpl[0].timestamp
+        else:
+            if dpl[0].data == dpl[1].data:
+                return dpl[1].timestamp
+            return dpl[0].timestamp
     def set(self,value):
         rv=self.controller.write(self.name,value)
         # After setting a register we force a readback from the hardware,
