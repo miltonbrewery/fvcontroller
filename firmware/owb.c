@@ -243,27 +243,31 @@ int32_t owb_read_temp(const uint8_t *id)
 {
   int32_t temp;
   uint8_t i;
+  uint8_t tries;
   uint8_t sp[9];
   if (is_null_id(id)) return BAD_TEMP;
-  if (owb_reset()) return BAD_TEMP;
-  owb_match_rom(id);
-  owb_byte_wr(DS18X20_READ_POWER);
-  if (owb_byte_rd()!=0xff) { /* Not powered */
-    record_error(&owb_powererr_cnt);
-    return BAD_TEMP;
+  for (tries=10; tries>0; tries--) {
+    if (owb_reset()) continue;
+    owb_match_rom(id);
+    owb_byte_wr(DS18X20_READ_POWER);
+    if (owb_byte_rd()!=0xff) { /* Not powered */
+      record_error(&owb_powererr_cnt);
+      continue;
+    }
+    if (owb_reset()) continue;
+    owb_match_rom(id);
+    owb_byte_wr(DS18X20_READ);
+    for (i=0; i<9; i++) {
+      sp[i]=owb_byte_rd();
+    }
+    if (owb_crc(sp,9)!=0) { /* Bad CRC */
+      record_error(&owb_crcerr_cnt);
+    } else {
+      temp=((sp[1]<<8)|sp[0])*625L;
+      return temp;
+    }
   }
-  if (owb_reset()) return BAD_TEMP;
-  owb_match_rom(id);
-  owb_byte_wr(DS18X20_READ);
-  for (i=0; i<9; i++) {
-    sp[i]=owb_byte_rd();
-  }
-  if (owb_crc(sp,9)!=0) { /* Bad CRC */
-    record_error(&owb_crcerr_cnt);
-    return BAD_TEMP;
-  }
-  temp=((sp[1]<<8)|sp[0])*625L;
-  return temp;
+  return BAD_TEMP;
 }
 
 static const char PROGMEM owb_addr_fstr[]="%02X%02X%02X%02X%02X%02X%02X%02X";
