@@ -1,13 +1,14 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <title>{% block title %}Fermenter controller{% endblock %}</title>
-{% block style %}<link rel="STYLESHEET" type="text/css" href="{{STATIC_URL}}style.css" />{% endblock %}
+{% block style %}<link rel="STYLESHEET" type="text/css" href="{% static "style.css" %}" />{% endblock %}
 {% block jquery %}
-<link rel="STYLESHEET" type="text/css" href="{{STATIC_URL}}jquery/jquery-ui.css" />
-<script type="text/javascript" src="{{STATIC_URL}}jquery.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}jquery-ui.js"></script>
-<script type="text/javascript" src="{{STATIC_URL}}jquery-ui-timepicker-addon.js"></script>
+<link rel="STYLESHEET" type="text/css" href="{% static "jquery/jquery-ui.css" %}" />
+<script type="text/javascript" src="{% static "jquery.js" %}"></script>
+<script type="text/javascript" src="{% static "jquery-ui.js" %}"></script>
+<script type="text/javascript" src="{% static "jquery-ui-timepicker-addon.js" %}"></script>
 {% endblock %}
 </head>
 <body>

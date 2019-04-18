@@ -11,9 +11,9 @@
 </form>
 
 <ul>
-<li><a href="{% url "datalog.views.detailgraph" controller.ident back start %}">Back {{period}}</a></li>
-<li><a href="{% url "datalog.views.detailgraph" controller.ident end forward %}">Forward {{period}}</a></li>
-<li><a href="{% url "datalog.views.detailgraph" controller.ident %}">Most recent 7 days</a></li>
+<li><a href="{% url "datalog-detailgraph-period" controller.ident back start %}">Back {{period}}</a></li>
+<li><a href="{% url "datalog-detailgraph-period" controller.ident end forward %}">Forward {{period}}</a></li>
+<li><a href="{% url "datalog-detailgraph" controller.ident %}">Most recent 7 days</a></li>
 <li><a href="{% url "datalog-controller" controller.ident %}">Back to {{controller.description}} registers page</a></li>
 </ul>
 

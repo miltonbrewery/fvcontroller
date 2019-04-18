@@ -1,6 +1,6 @@
 from django.http import HttpResponse,HttpResponseRedirect,Http404
 from django.template import RequestContext
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django import forms
 from django.core.urlresolvers import reverse
 from datalog.models import *
@@ -11,10 +11,9 @@ import xml.etree.ElementTree as ET
 def summary(request):
     controllers=Controller.objects.all()
     registers=Register.objects.filter(frontpage=True).order_by("description").all()
-    return render_to_response('datalog/summary.html',
-                              {'controllers':controllers,
-                               'registers':registers},
-                              context_instance=RequestContext(request))
+    return render(request, 'datalog/summary.html',
+                  context={'controllers': controllers,
+                           'registers': registers})
 
 def detail(request,name,config=False):
     try:
@@ -30,12 +29,11 @@ def detail(request,name,config=False):
             if request.POST.has_key(r.name) and request.POST[r.name]:
                 r.set(request.POST[r.name])
         return HttpResponseRedirect("")
-    return render_to_response('datalog/detail.html',
-                              {'controller':controller,
-                               'registers':registers,
-                               'extraseries':extraseries,
-                               'config':config,},
-                              context_instance=RequestContext(request))
+    return render(request, 'datalog/detail.html',
+                  context={'controller': controller,
+                           'registers': registers,
+                           'extraseries': extraseries,
+                           'config': config,})
 
 class GraphPeriodForm(forms.Form):
     start=forms.DateTimeField()
@@ -80,17 +78,16 @@ def detailgraph(request,name,start=None,end=None):
 
     period=end-start
 
-    return render_to_response('datalog/detailgraph.html',
-                              {'controller':controller,
-                               'extraseries':extraseries,
-                               'form':form,
-                               'start':unicode(start),
-                               'end':unicode(end),
-                               'period':period,
-                               'back':unicode(start-period),
-                               'forward':unicode(end+period),
-                               },
-                              context_instance=RequestContext(request))
+    return render(request, 'datalog/detailgraph.html',
+                  context={'controller': controller,
+                           'extraseries': extraseries,
+                           'form': form,
+                           'start': unicode(start),
+                           'end': unicode(end),
+                           'period': period,
+                           'back': unicode(start-period),
+                           'forward': unicode(end+period),
+                  })
 
 def series_csv(request,name,register):
     try:

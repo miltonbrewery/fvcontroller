@@ -18,12 +18,12 @@
 <input type="submit" name="set" value="Alter registers" />
 </form>
 
-{% if not config %}<p><a href="config/">Click here for configuration registers</a></p>{% endif %}
+{% if not config %}<p><a href="{% url "datalog-controller-config" controller.ident %}">Click here for configuration registers</a></p>{% endif %}
 </section>
 
 {% if not config %}
 <section>
-<a href="{% url "datalog.views.detailgraph" controller.ident %}">
+<a href="{% url "datalog-detailgraph" controller.ident %}">
 <p>Last 7 days:</p>
 <img src="{% url "datalog-graph" %}?{% for reg in controller.register_set.all %}{% if reg.graphcolour %}series={{reg.controller.ident}}:{{reg.name}}:{{reg.graphcolour}}&amp;{% endif %}{% endfor %}{% for reg in extraseries %}series={{reg.controller.ident}}:{{reg.name}}:{{reg.graphcolour_all}}&amp;{% endfor %}start=7&amp;leftmargin=0&amp;bottommargin=0"></a>
 </section>
