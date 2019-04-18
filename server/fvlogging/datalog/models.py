@@ -81,7 +81,7 @@ class Controller(models.Model):
 class Datum(models.Model):
     class Meta:
         abstract=True
-    register=models.ForeignKey("Register")
+    register=models.ForeignKey("Register", on_delete=models.PROTECT)
     timestamp=models.DateTimeField()
     @staticmethod
     def cast(value):
@@ -129,7 +129,7 @@ class Register(models.Model):
     registers at regular intervals.
 
     """
-    controller=models.ForeignKey(Controller)
+    controller=models.ForeignKey(Controller, on_delete=models.PROTECT)
     name=models.CharField(max_length=8)
     description=models.TextField()
     # Something to indicate the datatype - there will be classes for each one
@@ -217,8 +217,8 @@ class NoteType(models.Model):
     desc=models.TextField()
 
 class Note(models.Model):
-    controller=models.ForeignKey(Controller)
-    type=models.ForeignKey(NoteType)
+    controller=models.ForeignKey(Controller, on_delete=models.CASCADE)
+    type=models.ForeignKey(NoteType, on_delete=models.CASCADE)
     timestamp=models.DateTimeField()
     data=models.TextField()
     class Meta:

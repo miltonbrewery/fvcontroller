@@ -49,7 +49,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('timestamp', models.DateTimeField()),
                 ('data', models.TextField()),
-                ('controller', models.ForeignKey(to='datalog.Controller')),
+                ('controller', models.ForeignKey(to='datalog.Controller',
+                                                 on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['-timestamp'],
@@ -76,7 +77,8 @@ class Migration(migrations.Migration):
                 ('frontpage', models.BooleanField(help_text='Show this register on the site front page?')),
                 ('graphcolour', models.CharField(help_text="Colour of trace on controller's default graph, or blank to leave out", max_length=20, blank=True)),
                 ('graphcolour_all', models.CharField(help_text='Colour of trace on all graphs, or blank to leave out', max_length=20, blank=True)),
-                ('controller', models.ForeignKey(to='datalog.Controller')),
+                ('controller', models.ForeignKey(to='datalog.Controller',
+                                                 on_delete=models.PROTECT)),
             ],
         ),
         migrations.CreateModel(
@@ -85,7 +87,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('timestamp', models.DateTimeField()),
                 ('data', models.TextField(null=True)),
-                ('register', models.ForeignKey(to='datalog.Register')),
+                ('register', models.ForeignKey(to='datalog.Register',
+                                               on_delete=models.PROTECT)),
             ],
             options={
                 'abstract': False,
@@ -94,16 +97,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='note',
             name='type',
-            field=models.ForeignKey(to='datalog.NoteType'),
+            field=models.ForeignKey(to='datalog.NoteType', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='integerdatum',
             name='register',
-            field=models.ForeignKey(to='datalog.Register'),
+            field=models.ForeignKey(to='datalog.Register', on_delete=models.PROTECT),
         ),
         migrations.AddField(
             model_name='floatdatum',
             name='register',
-            field=models.ForeignKey(to='datalog.Register'),
+            field=models.ForeignKey(to='datalog.Register', on_delete=models.PROTECT),
         ),
     ]
