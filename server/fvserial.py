@@ -12,7 +12,7 @@
 # occurs.
 
 import serial
-import SocketServer
+import socketserver
 import time
 
 def full_reset(s):
@@ -32,7 +32,7 @@ def full_reset(s):
     s.timeout = old_timeout
     s.write("SELECT NONE\n")
 
-class ConnectionHandler(SocketServer.StreamRequestHandler):
+class ConnectionHandler(socketserver.StreamRequestHandler):
     def handle(self):
         for data in self.rfile:
             data = data.strip()
@@ -50,7 +50,7 @@ class ConnectionHandler(SocketServer.StreamRequestHandler):
 if __name__=="__main__":
     HOST, PORT = "localhost", 1576
 
-    server = SocketServer.TCPServer((HOST, PORT), ConnectionHandler)
+    server = socketserver.TCPServer((HOST, PORT), ConnectionHandler)
 
     s = serial.Serial("/dev/fvcontrollers", timeout=0.5)
     full_reset(s)
