@@ -13,7 +13,6 @@
 
 import serial
 import socketserver
-import time
 
 def full_reset(s):
     """Return the bus to a known state
@@ -25,34 +24,41 @@ def full_reset(s):
     # sending this for up to 0.1s for any output from the currently
     # selected controller to be completed; we receive and discard this
     # output.  No controller will send more than one line.
-    s.write("\n")
+    s.write(b"\n")
     old_timeout = s.timeout
     s.timeout = 0.1
-    s.readline()
+    # Read until we time out
+    foo = True
+    while foo:
+        foo = s.read()
     s.timeout = old_timeout
-    s.write("SELECT NONE\n")
 
 class ConnectionHandler(socketserver.StreamRequestHandler):
     def handle(self):
         for data in self.rfile:
             data = data.strip()
-            s.write("%s\n" % data)
-            response = s.readline()
-            if response == "":
-                response = "TIMEOUT\n"
-            if response[-1] != "\n":
-                response="CORRUPT\n"
+            s.write(data + b"\n")
+            response = s.read_until()
+            # A floating line produces \0 characters.  Remove them.
+            response = response.replace(b'\0', b'')
+            if response == b"":
+                response = b"TIMEOUT\n"
+            elif response[-1] != ord("\n"):
+                response = b"CORRUPT\n"
             try:
                 self.wfile.write(response)
             except:
                 break
 
+class ReuseTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
 if __name__=="__main__":
     HOST, PORT = "localhost", 1576
 
-    server = socketserver.TCPServer((HOST, PORT), ConnectionHandler)
+    server = ReuseTCPServer((HOST, PORT), ConnectionHandler)
 
-    s = serial.Serial("/dev/fvcontrollers", timeout=0.5)
+    s = serial.Serial("/dev/fvcontrollers", timeout=1.0)
     full_reset(s)
 
     server.serve_forever()
