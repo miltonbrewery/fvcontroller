@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from django.db import models
 import socket
 import time,datetime
@@ -73,7 +72,7 @@ class Controller(models.Model):
 
         """
         return {x.name.replace('/',''):x for x in self.register_set.all()}
-    def __unicode__(self):
+    def __str__(self):
         return self.ident
     @models.permalink
     def get_absolute_url(self):
@@ -90,11 +89,12 @@ class Datum(models.Model):
 
 class StringDatum(Datum):
     data=models.TextField(null=True)
-    def __unicode__(self): return self.data
+    def __str__(self):
+        return self.data
 
 class FloatDatum(Datum):
     data=models.FloatField(null=True)
-    def __unicode__(self):
+    def __str__(self):
         if self.data: return "%0.2f"%self.data
         return "None"
     @staticmethod
@@ -104,7 +104,7 @@ class FloatDatum(Datum):
 
 class IntegerDatum(Datum):
     data=models.IntegerField(null=True)
-    def __unicode__(self):
+    def __str__(self):
         if self.data: return "%d"%self.data
         return "None"
     @staticmethod
@@ -151,7 +151,7 @@ class Register(models.Model):
     graphcolour_all=models.CharField(
         max_length=20,blank=True,
         help_text="Colour of trace on all graphs, or blank to leave out")
-    def __unicode__(self):
+    def __str__(self):
         return "%s %s"%(self.controller,self.name)
     def value(self,force_check=False):
         # Read most recent (up to) two datapoints.

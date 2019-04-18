@@ -26,9 +26,12 @@ def detail(request,name,config=False):
         # Go through the registers looking for ones that have a value
         # set in the request, and update as appropriate.
         for r in registers:
-            if request.POST.has_key(r.name) and request.POST[r.name]:
+            if r.name in request.POST and request.POST[r.name]:
                 r.set(request.POST[r.name])
-        return HttpResponseRedirect("")
+        return HttpResponseRedirect(
+            reverse('datalog-controller-config' if config
+                    else 'datalog-controller',
+                    args=(name,)))
     return render(request, 'datalog/detail.html',
                   context={'controller': controller,
                            'registers': registers,
@@ -69,8 +72,8 @@ def detailgraph(request,name,start=None,end=None):
             start=cd['start']
             end=cd['end']
             return HttpResponseRedirect(
-                reverse('datalog.views.detailgraph',
-                        args=(name,unicode(start),unicode(end))))
+                reverse('datalog-detailgraph-period',
+                        args=(name, str(start), str(end))))
     else:
         form=GraphPeriodForm(initial={
             'start':start,
@@ -82,11 +85,11 @@ def detailgraph(request,name,start=None,end=None):
                   context={'controller': controller,
                            'extraseries': extraseries,
                            'form': form,
-                           'start': unicode(start),
-                           'end': unicode(end),
+                           'start': str(start),
+                           'end': str(end),
                            'period': period,
-                           'back': unicode(start-period),
-                           'forward': unicode(end+period),
+                           'back': str(start-period),
+                           'forward': str(end+period),
                   })
 
 def series_csv(request,name,register):
@@ -143,11 +146,11 @@ def graph(request):
     floatmin=float(request.GET.get('floatmin',0.0))
     floatmax=float(request.GET.get('floatmax',30.0))
     end=None
-    if request.GET.has_key('end'):
+    if 'end' in request.GET:
         end=parsedatetime(request.GET['end'])
     if end is None: end=datetime.datetime.now()
     start=None
-    if request.GET.has_key('start'):
+    if 'start' in request.GET:
         start=parsedatetime(request.GET['start'])
         if start is None:
             try:
