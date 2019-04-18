@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 import socket
 import time,datetime
 try:
@@ -74,9 +75,9 @@ class Controller(models.Model):
         return {x.name.replace('/',''):x for x in self.register_set.all()}
     def __str__(self):
         return self.ident
-    @models.permalink
+
     def get_absolute_url(self):
-        return ('datalog-controller',[self.ident])
+        return reverse('datalog-controller', args=[self.ident])
 
 class Datum(models.Model):
     class Meta:
