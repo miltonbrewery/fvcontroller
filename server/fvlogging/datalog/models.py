@@ -85,6 +85,9 @@ class Controller(models.Model):
     def get_absolute_url(self):
         return reverse('datalog-controller', args=[self.ident])
 
+    class Meta:
+        ordering = ['id']
+
 class Datum(models.Model):
     class Meta:
         abstract = True
@@ -152,6 +155,9 @@ class Register(models.Model):
     unit = models.CharField(max_length=10, null=True, blank=True)
     readonly = models.BooleanField(
         help_text="Can value not be set on controller?")
+    # Set a value after a time in the future
+    future_value = models.CharField(max_length=20, blank=True, null=True)
+    future_time = models.DateTimeField(blank=True, null=True)
     # If the most recent recorded value is older than this, read it
     # again from the hardware rather than the database
     max_interval = models.IntegerField() # In seconds
@@ -236,6 +242,9 @@ class Register(models.Model):
         # ignoring the timestamp on the most recently recorded datapoint.
         self.value(force_check=True)
         return rv
+
+    class Meta:
+        ordering = ['id']
 
 class NoteType(models.Model):
     desc = models.TextField()

@@ -1,21 +1,43 @@
 {% extends "datalog/base.html" %}
-{% block jquery %}{% endblock %}
 {% block content %}
 <header>{{controller.description}}</header>
 
 <section>
 <form action="" method="post">{% csrf_token %}
-<table class="RegisterTable">
-<tr><th>Register</th><th>Value</th><th>New value</th><th>Last changed</th></tr>
+  <table class="RegisterTable">
+    <tr>
+      <th>Register</th><th>Value</th><th>New value</th><th>Last changed</th>
+{% if not config %}
+      <th>Future value</th><th>Apply after</th>
+{% endif %}
+    </tr>
 {% for r in registers %}
-<tr><td>{{r.description}}</td><td>{{r.value}}{{r.unit}}</td>
-<td>{% if not r.readonly %}
-<input type="text" name="{{r.name}}" id="td_{{r.name}}" />
-{% endif %}</td>
-<td>{{r.last_change}}</td></tr>
+    <tr><td>{{r.description}}</td><td>{{r.value}}{{r.unit}}</td>
+      <td>{% if not r.readonly %}
+	<input type="text" name="{{r.name}}" id="td_{{r.name}}" />
+	{% endif %}</td>
+      <td>{{r.last_change}}</td>
+{% if not config %}
+      <td>{% if r.future_value %}{{r.future_value}}{% endif %}</td>
+      <td>{% if r.future_time %}{{r.future_time}}{% endif %}</td>
+{% endif %}
+    </tr>
 {% endfor %}
-</table>
-<input type="submit" name="set" value="Alter registers" />
+  </table>
+{% if not config %}
+{{fcform.as_p}}
+  <script type="text/javascript">
+var dtpicker_options = {firstDay: 1,
+  dateFormat: 'yy-mm-dd', timeFormat: 'hh:mm:ss'}
+$(document).ready(function(){
+ $("#id_after").datetimepicker(dtpicker_options);
+})
+  </script>
+{% endif %}
+  <button type="submit" name="set">Alter registers</button>
+{% if not config %}
+  <button type="submit" name="clear">Clear future values</button>
+{% endif %}
 </form>
 
 {% if not config %}<p><a href="{% url "datalog-controller-config" controller.ident %}">Click here for configuration registers</a></p>{% endif %}

@@ -19,6 +19,9 @@ def summary(request):
                   context={'controllers': controllers,
                            'registers': registers})
 
+class FutureChangeForm(forms.Form):
+    after = forms.DateTimeField(required=False, label="Set values after")
+
 def detail(request, name, config=False):
     try:
         controller = Controller.objects.get(ident=name)
@@ -28,21 +31,35 @@ def detail(request, name, config=False):
     extraseries = Register.objects.exclude(graphcolour_all="")
 
     if request.method == 'POST':
-        # Go through the registers looking for ones that have a value
-        # set in the request, and update as appropriate.
-        for r in registers:
-            if r.name in request.POST and request.POST[r.name]:
-                r.set(request.POST[r.name])
-        return HttpResponseRedirect(
-            reverse('datalog-controller-config' if config
-                    else 'datalog-controller',
-                    args=(name,)))
+        fcform = FutureChangeForm(request.POST)
+        if fcform.is_valid():
+            after = fcform.cleaned_data['after']
+            for r in registers:
+                if 'set' in request.POST:
+                    if r.name in request.POST and request.POST[r.name]:
+                        if after:
+                            r.future_value = request.POST[r.name]
+                            r.future_time = after
+                            r.save()
+                        else:
+                            r.set(request.POST[r.name])
+                elif 'clear' in request.POST:
+                    r.future_value = None
+                    r.future_time = None
+                    r.save()
+            return HttpResponseRedirect(
+                reverse('datalog-controller-config' if config
+                        else 'datalog-controller',
+                        args=(name,)))
+    else:
+        fcform = FutureChangeForm()
 
     return render(request, 'datalog/detail.html',
                   context={'controller': controller,
                            'registers': registers,
                            'extraseries': extraseries,
                            'config': config,
+                           'fcform': fcform,
                   })
 
 class GraphPeriodForm(forms.Form):
