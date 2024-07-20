@@ -1,0 +1,24 @@
+[general]
+serial = "/dev/ttyUSB0"
+mqtt_hostname = "localhost"
+mqtt_port = 1883
+#mqtt_username = "fvserial"
+#mqtt_password = "foo"
+discovery_prefix = "homeassistant"
+listen_hostname = "localhost"
+listen_port = 1576
+
+[controller.FV1]
+registers = ["t0", "v0", "t0/id", "mode", "alarm", "set/lo", "set/hi",
+  "alarm/lo", "alarm/hi",
+  "err/crc", "err/shrt", "err/pwr", "err/miss",
+  "m0/name", "m0/lo", "m0/hi", "m0/a/lo", "m0/a/hi", "m0/j/lo", "m0/j/hi",
+  "m1/name", "m1/lo", "m1/hi", "m1/a/lo", "m1/a/hi", "m1/j/lo", "m1/j/hi",
+  ]
+
+[controller.FV1.v0]
+poll-interval = 50
+
+[controller.FV1.t0]
+poll-interval = 5
+description = "Room probe temp"

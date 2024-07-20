@@ -58,7 +58,7 @@ if __name__=="__main__":
 
     server = ReuseTCPServer((HOST, PORT), ConnectionHandler)
 
-    s = serial.Serial("/dev/fvcontrollers", timeout=1.0)
+    s = serial.Serial("/dev/ttyUSB0", timeout=1.0)
     full_reset(s)
 
     server.serve_forever()
