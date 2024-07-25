@@ -6,7 +6,7 @@ authors = ["Stephen Early <steve@assorted.org.uk>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 paho-mqtt = "^2"
 pyserial = "^3.5"
 tomli = "^2.0"
