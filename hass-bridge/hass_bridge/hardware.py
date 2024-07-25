@@ -316,12 +316,12 @@ class Register:
 
 class TempReg(Register):
     names = {
-        "t0": "t0",
+        "t0": "Fermenter temperature",
         "t1": "t1",
         "t2": "t2",
         "t3": "t3",
     }
-    poll_interval = 30
+    poll_interval = 60
     discovery = {
         "state_class": "measurement",
         "device_class": "temperature",
