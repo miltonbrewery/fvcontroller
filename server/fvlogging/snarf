@@ -4,7 +4,7 @@ set -e
 
 tmpfile=/tmp/fvlogging-snarf-$$
 
-ssh sde@electra.milton.i.individualpubs.co.uk "pg_dump fvlogging | gzip -9" > ${tmpfile}.gz
+ssh fermenters@milton.individualpubs.co.uk "pg_dump fvlogging | gzip -9" > ${tmpfile}.gz
 gzip -d ${tmpfile}.gz
 dropdb fvlogging
 createdb fvlogging
