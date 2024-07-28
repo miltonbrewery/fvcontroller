@@ -57,7 +57,7 @@ class Bus:
         if topic in self.mqtt_topics:
             self.mqtt_topics[topic].process_mqtt_message(topic, payload)
         elif topic == f"{self.ha_discovery_prefix}/status" \
-           and payload == "online":
+           and payload == "online":  # noqa: E127
             self.send_ha_discovery()
 
     def full_reset(self):
@@ -335,6 +335,17 @@ class TempReg(Register):
         "unit_of_measurement": "°C",
         "suggested_display_precision": 2,
     }
+
+    def format_payload(self, val):
+        try:
+            # The CLB sensor sometimes returns nonsensical negative
+            # values that mess up the scale on graphs in Home
+            # Assistant
+            if float(val) < 0.0:
+                return "0.0"
+        except Exception:
+            pass
+        return val
 
 
 class TempIDReg(Register):
