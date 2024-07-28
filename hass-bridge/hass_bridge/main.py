@@ -15,25 +15,22 @@ log = logging.getLogger(__name__)
 def incoming_connection(sock, bus):
     log.debug("Accepting TCP connection")
     conn, addr = sock.accept()
+    conn.settimeout(10)
     with conn.makefile('rb') as f:
-        for data in f:
-            data = data.strip()
-            if not data:
-                continue
-            bus.s.write(data + b"\n")
-            response = bus.s.read_until()
-            # A floating line produces \0 characters.  Remove them.
-            response = response.replace(b'\0', b'')
-            if response == b"":
-                response = b"TIMEOUT\n"
-            elif response[-1] != ord("\n"):
-                response = b"CORRUPT\n"
-            bus.interpret(data, response)
-            try:
-                conn.send(response)
-            except Exception as e:
-                log.error("Exception writing to socket: %s", e)
-                break
+        try:
+            for data in f:
+                data = data.strip()
+                if not data:
+                    continue
+                response = bus.communicate(data)
+                bus.interpret(data, response)
+                try:
+                    conn.send(response)
+                except Exception as e:
+                    log.error("Exception writing to socket: %s", e)
+                    break
+        except Exception as e:
+            log.error("Exception reading from socket: %s", e)
     log.debug("Closing TCP connection")
     conn.close()
 

@@ -71,14 +71,22 @@ class Bus:
         # selected controller to be completed; we receive and discard this
         # output.  No controller will send more than one line.
         self.s.write(b"\n")
-        old_timeout = self.s.timeout
-        self.s.timeout = 0.1
         # Read until we time out
         foo = True
         while foo:
             foo = self.s.read()
-            self.s.timeout = old_timeout
             self.selected = None
+
+    def communicate(self, command):
+        self.s.write(command + b"\n")
+        response = self.s.read_until()
+        # A floating line produces \0 characters.  Remove them.
+        response = response.replace(b'\0', b'')
+        if response == b"":
+            response = b"TIMEOUT\n"
+        elif response[-1] != ord("\n"):
+            response = b"CORRUPT\n"
+        return response
 
     def interpret(self, sent_b: bytes, received_b: bytes):
         # The TCP interface was used to communicate directly with the
@@ -124,8 +132,7 @@ class Controller:
     def select(self):
         if self.bus.selected == self:
             return True
-        self.bus.s.write(f"SELECT {self.name}\n".encode(hw_charset))
-        r = self.bus.s.readline()
+        r = self.bus.communicate(f"SELECT {self.name}".encode(hw_charset))
         if r != f"OK {self.name} selected\n".encode(hw_charset):
             self.log.error(f"Could not select, got {r} instead")
             return False
@@ -135,8 +142,8 @@ class Controller:
     def read(self, reg):
         if not self.select():
             return
-        self.bus.s.write(f"READ {reg}\n".encode(hw_charset))
-        r = self.bus.s.readline().decode(hw_charset)
+        r = self.bus.communicate(f"READ {reg}".encode(hw_charset))\
+                    .decode(hw_charset)
         return self.process_read_reply(r)
 
     def process_read_reply(self, r):
@@ -154,8 +161,8 @@ class Controller:
     def write(self, reg, value):
         if not self.select():
             return
-        self.bus.s.write(f"SET {reg} {value}\n".encode(hw_charset))
-        r = self.bus.s.readline().decode(hw_charset)
+        r = self.bus.communicate(f"SET {reg} {value}".encode(hw_charset))\
+                    .decode(hw_charset)
         return self.process_write_reply(reg, r)
 
     def process_write_reply(self, reg, r):
