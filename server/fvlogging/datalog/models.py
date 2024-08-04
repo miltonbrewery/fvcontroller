@@ -30,24 +30,25 @@ class Controller(models.Model):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect((self.address, self.port))
-        except:
+        except Exception:
             return None
         s.settimeout(1.5)
-        s = s.makefile('rw')
-        s.write("SELECT %s\n" % self.ident)
-        s.flush()
-        response = s.readline()
-        if response != "OK %s selected\n" % self.ident:
-            s.close()
+        sf = s.makefile('rw')
+        s.close()
+        sf.write(f"SELECT {self.ident}\n")
+        sf.flush()
+        response = sf.readline()
+        if response != f"OK {self.ident} selected\n":
+            sf.close()
             return None
-        return s
+        return sf
 
     def read(self, register):
         """Read a register as a string.
         """
         s = self.connect()
         if not s:
-            return None # Maybe raise exception instead?
+            return None  # Maybe raise exception instead?
         try:
             s.write("READ %s\n" % register)
             s.flush()
@@ -63,7 +64,7 @@ class Controller(models.Model):
         """
         s = self.connect()
         if not s:
-            return None # Exception?
+            return None  # Exception?
         try:
             s.write("SET %s %s\n" % (register, value))
             s.flush()
