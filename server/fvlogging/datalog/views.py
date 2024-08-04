@@ -89,7 +89,7 @@ def detailgraph(request, name, start=None, end=None):
     except Controller.DoesNotExist:
         raise Http404
     extraseries = Register.objects.exclude(graphcolour_all="")
-    if start is None or end is None:
+    if start == None or end == None:
         end = datetime.datetime.now().replace(microsecond=0)
         start = end - datetime.timedelta(days=7)
     else:
