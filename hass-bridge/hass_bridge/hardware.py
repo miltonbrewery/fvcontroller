@@ -96,7 +96,7 @@ class Bus:
         received = received_b.decode(hw_charset)
         if sent.startswith("SELECT "):
             selected = sent[7:]
-            if received == f"OK {selected} selected":
+            if received == f"OK {selected} selected\n":
                 self.selected = self.controllers.get(selected)
             else:
                 self.selected = None
@@ -104,6 +104,8 @@ class Bus:
         else:
             if self.selected:
                 self.selected.interpret(sent, received)
+            else:
+                self.log.debug("No controller selected, ignoring")
 
     def poll(self):
         for controller in self.controllers.values():
@@ -135,6 +137,7 @@ class Controller:
         r = self.bus.communicate(f"SELECT {self.name}".encode(hw_charset))
         if r != f"OK {self.name} selected\n".encode(hw_charset):
             self.log.error(f"Could not select, got {r} instead")
+            self.bus.selected = None
             return False
         self.bus.selected = self
         return True
@@ -149,12 +152,15 @@ class Controller:
     def process_read_reply(self, r):
         if not r:
             self.log.debug("No response to READ")
+            self.bus.selected = None
             return
         if len(r) < 4:
             self.log.debug("Short response to READ: %s", r)
+            self.bus.selected = None
             return
         if r[:3] != "OK " or r[-1:] != "\n":
             self.log.debug("Error response to READ: %s", r)
+            self.bus.selected = None
             return
         return r[3:-1]
 
@@ -168,14 +174,18 @@ class Controller:
     def process_write_reply(self, reg, r):
         if not r:
             self.log.debug("No response to SET")
+            self.bus.selected = None
             return
         if r[:3] != "OK " or r[-1:] != "\n":
             self.log.debug("Error response to SET: %s", r)
+            self.bus.selected = None
             return
         r = r[:-1]
         expected = f"OK {reg} set to "
         if not r.startswith(expected):
             self.log.error("Failed to set %s; received %s", reg, r)
+            self.bus.selected = None
+            return
         return r[len(expected):]
 
     def ping(self):
@@ -184,9 +194,11 @@ class Controller:
         r = self.read("ident")
         if not r:
             self.log.error("Ping could not read ident register")
+            self.bus.selected = None
             return False
         if r != self.name:
             self.log.error(f"Ping returned unexpected result {r} instead")
+            self.bus.selected = None
             return False
         return True
 
