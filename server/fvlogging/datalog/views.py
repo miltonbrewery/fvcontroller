@@ -89,7 +89,7 @@ def detailgraph(request, name, start=None, end=None):
     except Controller.DoesNotExist:
         raise Http404
     extraseries = Register.objects.exclude(graphcolour_all="")
-    if start == None or end == None:
+    if start is None or end is None:
         end = datetime.datetime.now().replace(microsecond=0)
         start = end - datetime.timedelta(days=7)
     else:
@@ -230,7 +230,7 @@ def graph(request):
                       y1=str(scaley), y2=str(scaley),
                       stroke="lightgrey")
         y = y + 1.0
-        y = 0.0
+    y = 0.0
     while y < floatmax:
         scaley = (y - floatmin) * graphheight / floatmax
         ET.SubElement(g, "line", x1="0", x2=str(width),
