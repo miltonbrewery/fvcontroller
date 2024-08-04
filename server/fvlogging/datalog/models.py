@@ -1,10 +1,10 @@
 from django.db import models
 from django.urls import reverse
 import socket
-import time
 import datetime
 import django.utils.timezone
 now = django.utils.timezone.now
+
 
 class Controller(models.Model):
     """A controller that can be present on a RS485 bus.
@@ -89,6 +89,7 @@ class Controller(models.Model):
     class Meta:
         ordering = ['id']
 
+
 class Datum(models.Model):
     class Meta:
         abstract = True
@@ -99,16 +100,20 @@ class Datum(models.Model):
     def cast(value):
         return value
 
+
 class StringDatum(Datum):
     data = models.TextField(null=True)
+
     def __str__(self):
         return self.data
 
+
 class FloatDatum(Datum):
     data = models.FloatField(null=True)
+
     def __str__(self):
         if self.data:
-            return "%0.2f"%self.data
+            return "%0.2f" % self.data
         return "None"
 
     @staticmethod
@@ -117,8 +122,10 @@ class FloatDatum(Datum):
             return None
         return float(value)
 
+
 class IntegerDatum(Datum):
     data = models.IntegerField(null=True)
+
     def __str__(self):
         if self.data:
             return "%d" % self.data
@@ -129,6 +136,7 @@ class IntegerDatum(Datum):
         if value == "None":
             return None
         return int(value)
+
 
 DATATYPES = (
     ('S', "StringDatum"),
@@ -141,6 +149,7 @@ DATATYPE_DICT = {
     'F': FloatDatum,
     'I': IntegerDatum,
 }
+
 
 class Register(models.Model):
     """A register found in a controller.
@@ -161,8 +170,8 @@ class Register(models.Model):
     future_time = models.DateTimeField(blank=True, null=True)
     # If the most recent recorded value is older than this, read it
     # again from the hardware rather than the database
-    max_interval = models.IntegerField() # In seconds
-    config = models.BooleanField() # Is this a configuration register?
+    max_interval = models.IntegerField()  # In seconds
+    config = models.BooleanField()  # Is this a configuration register?
     frontpage = models.BooleanField(
         help_text="Show this register on the site front page?")
     graphcolour = models.CharField(
@@ -185,19 +194,19 @@ class Register(models.Model):
         # is, and consider recording a new one if it is more than
         # max_interval seconds old.
         if len(dpl) == 0 or force_check or (
-            (now() - dpl[0].timestamp)
-            > datetime.timedelta(seconds=self.max_interval)):
+                (now() - dpl[0].timestamp)
+                > datetime.timedelta(seconds=self.max_interval)):
             r = self.controller.read(self.name)
             if not r:
                 # Reading from the hardware failed.  We return the most
                 # recent value if there is one, or None.
-                if len(dpl)>0:
+                if len(dpl) > 0:
                     return dpl[0]
                 else:
                     return None
             val = dt.cast(r)
-            if (len(dpl) > 0 and val == dpl[0].data and len(dpl) == 2 and
-                dpl[0].data == dpl[1].data):
+            if len(dpl) > 0 and val == dpl[0].data and len(dpl) == 2 \
+               and dpl[0].data == dpl[1].data:
                 # No change, and we already have two datapoints in a
                 # row with this value.  We just update the timestamp
                 # on the most recent.
@@ -247,13 +256,16 @@ class Register(models.Model):
     class Meta:
         ordering = ['id']
 
+
 class NoteType(models.Model):
     desc = models.TextField()
+
 
 class Note(models.Model):
     controller = models.ForeignKey(Controller, on_delete=models.CASCADE)
     type = models.ForeignKey(NoteType, on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
     data = models.TextField()
+
     class Meta:
         ordering = ['-timestamp']

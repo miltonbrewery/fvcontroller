@@ -1,5 +1,7 @@
-from django.conf.urls import url, include
+from django.conf.urls import url
 import datalog.views
+
+# Consider updating to django paths
 
 urlpatterns = [
     # Main index page
@@ -7,10 +9,10 @@ urlpatterns = [
     url(r'^detail/(?P<name>\w+)/$', datalog.views.detail,
         name="datalog-controller"),
     url(r'^detail/(?P<name>\w+)/config/$', datalog.views.detail,
-        {'config':True}, name="datalog-controller-config"),
+        {'config': True}, name="datalog-controller-config"),
     url(r'^detail/(?P<name>\w+)/graph/$', datalog.views.detailgraph,
         name="datalog-detailgraph"),
-    url(r'^detail/(?P<name>\w+)/graph/(?P<start>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)--(?P<end>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)$',
+    url(r'^detail/(?P<name>\w+)/graph/(?P<start>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)--(?P<end>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)$',  # noqa: E501
         datalog.views.detailgraph, name="datalog-detailgraph-period"),
     url(r'^series/(?P<name>\w+)-(?P<register>\w+/?\w*).csv$',
         datalog.views.series_csv, name="datalog-csvfile"),

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from django.core.management.base import BaseCommand, CommandError
-from datalog.models import Controller, Register
+from django.core.management.base import BaseCommand
+from datalog.models import Controller
 import django.utils.timezone
 
+
 class Command(BaseCommand):
-    def handle(self,*args,**options):
+    def handle(self, *args, **options):
         now = django.utils.timezone.now()
         for c in Controller.objects.all():
             # Check all the non-config registers

@@ -1,14 +1,14 @@
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import Http404
-from django.template import RequestContext
 from django.shortcuts import render
 from django import forms
 from django.urls import reverse
-from datalog.models import *
+from datalog.models import Controller, Register, DATATYPE_DICT
 import datetime
 import csv
 import xml.etree.ElementTree as ET
+
 
 def summary(request):
     controllers = Controller.objects.all()
@@ -19,8 +19,10 @@ def summary(request):
                   context={'controllers': controllers,
                            'registers': registers})
 
+
 class FutureChangeForm(forms.Form):
     after = forms.DateTimeField(required=False, label="Set values after")
+
 
 def detail(request, name, config=False):
     try:
@@ -54,28 +56,32 @@ def detail(request, name, config=False):
     else:
         fcform = FutureChangeForm()
 
-    return render(request, 'datalog/detail.html',
-                  context={'controller': controller,
-                           'registers': registers,
-                           'extraseries': extraseries,
-                           'config': config,
-                           'fcform': fcform,
-                  })
+    return render(
+        request, 'datalog/detail.html', context={
+            'controller': controller,
+            'registers': registers,
+            'extraseries': extraseries,
+            'config': config,
+            'fcform': fcform,
+        })
+
 
 class GraphPeriodForm(forms.Form):
     start = forms.DateTimeField()
     end = forms.DateTimeField()
+
     def clean(self):
         s = None
         e = None
         try:
             s = self.cleaned_data['start']
             e = self.cleaned_data['end']
-        except:
+        except Exception:
             pass
         if s and e and e <= s:
             raise forms.ValidationError("Start must be before end")
         return self.cleaned_data
+
 
 def detailgraph(request, name, start=None, end=None):
     try:
@@ -83,7 +89,7 @@ def detailgraph(request, name, start=None, end=None):
     except Controller.DoesNotExist:
         raise Http404
     extraseries = Register.objects.exclude(graphcolour_all="")
-    if start == None or end == None:
+    if start is None or end is None:
         end = datetime.datetime.now().replace(microsecond=0)
         start = end - datetime.timedelta(days=7)
     else:
@@ -116,11 +122,12 @@ def detailgraph(request, name, start=None, end=None):
                            'period': period,
                            'back': str(start - period),
                            'forward': str(end + period),
-                  })
+                           })
+
 
 def series_csv(request, name, register):
     try:
-        controller=Controller.objects.get(ident=name)
+        controller = Controller.objects.get(ident=name)
     except Controller.DoesNotExist:
         raise Http404
     try:
@@ -137,6 +144,7 @@ def series_csv(request, name, register):
         c.writerow((d.timestamp.strftime("%Y-%m-%d %H:%M:%S"), d.data))
     return r
 
+
 def parsedatetime(d):
     """Convert a string to a datetime object
 
@@ -150,6 +158,7 @@ def parsedatetime(d):
         except ValueError:
             pass
     return None
+
 
 def graph(request):
     """Draw a graph.  Time will always be along the x axis.
@@ -176,12 +185,13 @@ def graph(request):
         end = parsedatetime(request.GET['end'])
     if end is None:
         end = datetime.datetime.now()
-    start = None
+        start = None
     if 'start' in request.GET:
         start = parsedatetime(request.GET['start'])
         if start is None:
             try:
-                start = end - datetime.timedelta(days=int(request.GET['start']))
+                start = end - datetime.timedelta(
+                    days=int(request.GET['start']))
             except ValueError:
                 pass
     if start is None:
@@ -206,8 +216,9 @@ def graph(request):
     # that the origin is in the bottom-left
     g = ET.SubElement(svg, "g", transform="translate(%d,%d) scale(1,-1)" % (
         leftmargin, height - bottommargin))
-    
-    # We now can draw axes, etc. from 0 - (width - leftmargin) on X and 0 - (height - bottommargin) on y
+
+    # We now can draw axes, etc. from 0 - (width - leftmargin) on X
+    # and 0 - (height - bottommargin) on y
     graphwidth = width - leftmargin
     graphheight = height - bottommargin
 
@@ -219,7 +230,7 @@ def graph(request):
                       y1=str(scaley), y2=str(scaley),
                       stroke="lightgrey")
         y = y + 1.0
-    y = 0.0
+        y = 0.0
     while y < floatmax:
         scaley = (y - floatmin) * graphheight / floatmax
         ET.SubElement(g, "line", x1="0", x2=str(width),
@@ -241,7 +252,7 @@ def graph(request):
         sdp = dt.objects.filter(register=register, timestamp__lt=start)\
                         .order_by('-timestamp')[:1]
         s_start = sdp[0].timestamp if len(sdp) == 1 else start
-        edp = dt.objects.filter(register=register,timestamp__gt=end)\
+        edp = dt.objects.filter(register=register, timestamp__gt=end)\
                         .order_by('timestamp')[:1]
         s_end = edp[0].timestamp if len(edp) == 1 else end
         datapoints = dt.objects.filter(register=register, timestamp__lte=s_end,
