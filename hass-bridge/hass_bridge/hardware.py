@@ -315,8 +315,10 @@ class Register:
             if self.writable:
                 self.last_update = time.time()
             return
-        self.controller.bus.mqttc.publish(
-            self.state_topic, self.format_payload(val))
+        payload = self.format_payload(val)
+        if payload:
+            self.controller.bus.mqttc.publish(
+                self.state_topic, self.format_payload(val))
         self.ack(val)
         self.last_update = time.time()
 
@@ -328,6 +330,8 @@ class Register:
 
     def format_payload(self, val):
         """Process raw value from hardware before sending mqtt message
+
+        Return None to prevent the message being sent
         """
         return val
 
@@ -418,11 +422,12 @@ class TempReg(Register):
 
     def format_payload(self, val):
         try:
-            # The CLB sensor sometimes returns nonsensical negative
-            # values that mess up the scale on graphs in Home
-            # Assistant
+            # The CLB sensor sometimes returns nonsensical values that
+            # mess up the scale on graphs in Home Assistant
             if float(val) < 0.0:
-                return "0.0"
+                return
+            if float(val) > 100.0:
+                return
         except Exception:
             pass
         return val
