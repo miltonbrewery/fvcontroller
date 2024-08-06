@@ -371,7 +371,7 @@ class ModeButton:
         controller.add_button(self)
 
     def send_ha_discovery(self):
-        topic = f"{self.controller.bus.ha_discovery_prefix}/button/"\
+        topic = f"{self.controller.bus.ha_discovery_prefix}/scene/"\
             f"{self.unique_id}/config"
         msg = {
             "availability_topic": self.controller.bus.availability_topic,
@@ -379,6 +379,7 @@ class ModeButton:
             "object_id": self.entity_name,
             "name": self.human_name,
             "command_topic": self.command_topic,
+            "payload_on": "ON",
             "unique_id": self.unique_id,
         }
         self.controller.bus.mqttc.publish(topic, json.dumps(msg))
