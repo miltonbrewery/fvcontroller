@@ -120,6 +120,7 @@ class Controller:
         self.mqtt_path = f"{bus.mqtt_path}/{name}"
         self.entity_prefix = config.get("entity_prefix", name.lower())
         self.unique_id = f"fvc_{name}"
+        self.buttons = []
         self.registers = {
             r: Register.all_registers[r](self, r, config.get(r, {}))
             for r in config.get("registers", [])}
@@ -234,10 +235,15 @@ class Controller:
     def send_ha_discovery(self):
         for register in self.registers.values():
             register.send_ha_discovery()
+        for button in self.buttons:
+            button.send_ha_discovery()
 
     def poll(self):
         for register in self.registers.values():
             register.poll()
+
+    def add_button(self, button):
+        self.buttons.append(button)
 
 
 class Register:
@@ -331,6 +337,68 @@ class Register:
         # Error registers will want to write val back to the device to
         # reduce the error counter
         pass
+
+
+class ModeButton:
+    def __init__(self, modename_reg):
+        name = modename_reg.name.replace("name", "button")
+        prefix = name[:2]
+        controller = modename_reg.controller
+        self.modename_reg = modename_reg
+        self.log = controller.log.getChild(name)
+        self.name = name
+        ha_name = name.replace("/", "_")
+        self.controller = modename_reg.controller
+        self.unique_id = f"{controller.unique_id}_{ha_name}"
+        topic_prefix = f"{self.controller.mqtt_path}/{ha_name}"
+        self.command_topic = f"{topic_prefix}/command"
+        self.entity_name = f"{controller.entity_prefix}_{ha_name}"
+        self.human_name = f"{modename_reg.name} activate"
+        self.regmap = [
+            ("alarm/hi", f"{prefix}/a/hi"),
+            ("alarm/lo", f"{prefix}/a/lo"),
+            ("set/hi", f"{prefix}/hi"),
+            ("set/lo", f"{prefix}/lo"),
+            ("jog/hi", f"{prefix}/j/hi"),
+            ("jog/lo", f"{prefix}/j/lo"),
+            ("mode", f"{prefix}/name"),
+        ]
+        controller.bus.mqtt_topics[self.command_topic] = self
+        controller.add_button(self)
+
+    def send_ha_discovery(self):
+        topic = f"{self.controller.bus.ha_discovery_prefix}/button/"\
+            f"{self.unique_id}/config"
+        msg = {
+            "availability_topic": self.controller.bus.availability_topic,
+            "device": self.controller.ha_device,
+            "object_id": self.entity_name,
+            "name": self.human_name,
+            "command_topic": self.command_topic,
+            "unique_id": self.unique_id,
+        }
+        self.controller.bus.mqttc.publish(topic, json.dumps(msg))
+
+    def set_name(self, name):
+        self.human_name = name
+        self.send_ha_discovery()
+
+    def process_mqtt_message(self, topic, payload):
+        self.log.debug("pressed")
+        # Read mode settings
+        settings = [self.controller.read(src) for _, src in self.regmap]
+        if not all(settings):
+            # Reading at least one of these failed; we can't continue
+            self.log.error("Failed to read settings for %s: %s",
+                           self.name, settings)
+            return
+
+        # Write settings into active registers
+        for ((dest, _), val) in zip(self.regmap, settings):
+            written = self.controller.write(dest, val)
+            reg = self.controller.registers.get(dest)
+            if reg:
+                reg.publish_update(written)
 
 
 class TempReg(Register):
@@ -435,6 +503,14 @@ class ConfigModeName(Register):
         "max": 8,
         "min": 1,
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.modebutton = ModeButton(self)
+
+    def publish_update(self, val):
+        super().publish_update(val)
+        self.modebutton.set_name(val)
 
 
 _mode_temp_names = {}
