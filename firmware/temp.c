@@ -101,12 +101,18 @@ void read_probes(void)
   } else {
     UNSET_ALARM(ALARM_TEMPERATURE_LOW);
   }
-  
-  /* Be a thermostat, with valve opened to provide chilling */
-  if (t0_temp>s_hi) {
-    desired_v0_state=1;
-  }
-  if (t0_temp<s_lo) {
+
+  if (s_hi>=s_lo) {
+    /* Be a thermostat, with valve opened to provide chilling */
+    if (t0_temp>s_hi) {
+      desired_v0_state=1;
+    }
+    if (t0_temp<s_lo) {
+      desired_v0_state=0;
+    }
+  } else {
+    /* The thermostat has been set to "off" by setting the high set-point
+       to be lower than the low set-point */
     desired_v0_state=0;
   }
 
